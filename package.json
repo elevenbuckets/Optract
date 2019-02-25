@@ -1,0 +1,23 @@
+{
+  "name": "Optract",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elevenbuckets/Optract.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/elevenbuckets/Optract/issues"
+  },
+  "homepage": "https://github.com/elevenbuckets/Optract#readme",
+  "dependencies": {
+    "truffle": "^5.0.2"
+  }
+}

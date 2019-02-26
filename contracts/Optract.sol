@@ -167,23 +167,23 @@ contract Optract {
     }
 
     // query functions
-    function queryOptionPrice() public returns (uint256) {
+    function queryOptionPrice() public view returns (uint256) {
         return optionPrice;
     }
 
-    function queryOrderPrice() public returns (uint256) {
+    function queryOrderPrice() public view returns (uint256) {
         return totalPriceInDai;
     }
 
-    function queryOrderSize() public returns (uint256) {
+    function queryOrderSize() public view returns (uint256) {
         return ethAmount;
     }
 
-    function queryOnStock() public returns (bool) {
+    function queryOnStock() public view returns (bool) {
         return onStock;
     }
 
-    function isFilled() public returns (bool) {
+    function isFilled() public view returns (bool) {
         return (ethSeller != address(0) && address(this).balance > 0);
     }
 

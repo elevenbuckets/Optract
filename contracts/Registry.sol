@@ -43,7 +43,7 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 		require(ETHAmount >= 3);
 
 		optractRecord memory optRcd;
-		Optract opt = new Optract(ETHAmount, totalPrice, address(this), msg.sender, blkAddr);
+		Optract opt = new Optract(ETHAmount, totalPrice, address(this), msg.sender, blkAddr, currencyTokenAddr);
 		require(ERC20(currencyTokenAddr).transferFrom(msg.sender, address(opt), initialPayment));
 
 		optRcd.expiredTime = block.timestamp + period;
@@ -90,16 +90,16 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 			if (Optract(optAddr).queryOnStock() == false || optractRecordsByAddress[optAddr].expiredTime - 8 hours <= block.timestamp) continue;
 
 			if (optAddr.balance == Optract(optAddr).queryOrderSize()) {
-				filled.push(true);
+				filled[i-start] = true;
 			} else {
-				filled.push(false);
+				filled[i-start] = false;
 			}
 
-			addrlist.push(optAddr);
-			expTimeList.push(optractRecordsByAddress[optAddr].expiredTime);
-			priceList.push(Optract(optAddr).queryOrderPrice());
-			ETHList.push(Optract(optAddr).queryOrderSize());
-			opriceList.push(Optract(optAddr).queryOptionPrice());
+			addrlist[i-start] = optAddr;
+			expTimeList[i-start] = optractRecordsByAddress[optAddr].expiredTime;
+			priceList[i-start] = Optract(optAddr).queryOrderPrice();
+			ETHList[i-start] = Optract(optAddr).queryOrderSize();
+			opriceList[i-start] = Optract(optAddr).queryOptionPrice();
 		}
 	}
 }

@@ -38,7 +38,7 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 	}
 
 	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period) external notPaused {
-		require(ERC20(currencyTokenAddr).allowance(msg.sender, this) >= initialPayment);
+		require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= initialPayment);
 		require(period >= 30 days && period <= 365 days);
 		require(ETHAmount >= 3);
 

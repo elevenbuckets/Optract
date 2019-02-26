@@ -8,10 +8,6 @@ module.exports =
 	{
 		return true;
 	},
-	OptractRegistry_queryInitPrice_sanity(addr, jobObj) 
-	{
-		return true;
-	},
 	OptractRegistry_isExpired_sanity(addr, jobObj) 
 	{
 		return true;

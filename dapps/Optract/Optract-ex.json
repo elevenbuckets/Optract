@@ -1,5 +1,5 @@
 {
-   "appName": "Erebor",
+   "appName": "Optract",
    "artifactDir": "/home/kai/Work/project/11be/dapps/Optract/ABI",
    "conditionDir": "/home/kai/Work/project/11be/dapps/Optract/Conditions",
    "contracts": [{ "ctrName": "Optract", "conditions": ["Sanity"] },

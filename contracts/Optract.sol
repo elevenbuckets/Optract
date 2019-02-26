@@ -1,6 +1,7 @@
 pragma solidity ^0.5.2;
 import "./SafeMath.sol";
-// import "./RegistryInterface.sol";
+import "./RegistryInterface.sol";
+import "./ERC20.sol";
 // import "./BlockRegistryInterface.sol";
 
 /*
@@ -21,6 +22,7 @@ contract Optract {
     address public ethSeller;
     address public registryAddr;  // the contract registry
     address public blkAddr;  // the side-chain address
+    address public currencyTokenAddr;
     uint256 public ethAmount;
     uint256 public totalPriceInDai;
     uint256 public optionPrice;
@@ -35,27 +37,30 @@ contract Optract {
         uint256 _totalPriceInDai,
         address _registryAddr,
         address _originalOwner,
-        address _blkAddr
+        address _blkAddr,
+        address _currencyTokenAddr
     ) public {
         ethAmount = _ethAmount;
         totalPriceInDai = _totalPriceInDai;
         registryAddr = _registryAddr;
         originalOwner = _originalOwner;
         blkAddr = _blkAddr;
+        currencyTokenAddr = _currencyTokenAddr;
 
         onStock = true;  // for others to query
         currentOwner = _originalOwner;
         actionTime = block.timestamp;  // use this to avoid some too soon operations
-        optionPrice = iRegistry(registryAddr).queryInitPrice();
+        optionPrice = iOptractRegistry(registryAddr).queryInitPrice();
     }
 
     modifier ownerOnly() {
-        require(msg.sender = currentOwner, "not owner");
+        require(msg.sender == currentOwner, "not owner");
         _;
     }
 
     modifier ethFilled() {
         require (ethSeller != address(0) && address(this).balance > 0);
+        _;
     }
 
     modifier isOnStock() {
@@ -64,29 +69,29 @@ contract Optract {
     }
 
     modifier whenExpired() {
-        require(iRegistry(registryAddr).isExpired(address(this)) == true, "can no longer excercise");
+        require(iOptractRegistry(registryAddr).isExpired(address(this)) == true, "can no longer excercise");
         _;
     }
 
     modifier whenNotExpired() {
-        require(iRegistry(registryAddr).isExpired(address(this)) == false, "now can excercise");
+        require(iOptractRegistry(registryAddr).isExpired(address(this)) == false, "now can excercise");
         _;
     }
 
     // modifier whenLastExerciseChance() {
-    //     uint256 expireTime = iRegistry(registryAddr).getExpireTime();
+    //     uint256 expireTime = iOptractRegistry(registryAddr).getExpireTime();
     //     require(block.timestamp >= expireTime - 8 hours && block.timestamp < expireTime);
     //     _;
     // }
 
     modifier whenBeforeLastExerciseChance() {
-        uint256 expireTime = iRegistry(registryAddr).getExpireTime();
+        uint256 expireTime = iOptractRegistry(registryAddr).getExpireTime();
         require(block.timestamp < expireTime - 8 hours);
         _;
     }
 
     modifier whenCanExercise() {
-        uint256 expireTime = iRegistry(registryAddr).getExpireTime();
+        uint256 expireTime = iOptractRegistry(registryAddr).getExpireTime();
         require((onStock == false && block.timestamp < expireTime)
                 || (block.timestamp >= expireTime - 8 hours && block.timestamp < expireTime)
                );
@@ -100,20 +105,21 @@ contract Optract {
         actionTime = block.timestamp;
         onStock = false;
         // address(this) get 5 DAI (the fix optionPrice for 1st trade) from originalOwner in 'Registry' contract
-        iDAI.transfer(address(this), msg.sender, optionPrice);
+        ERC20(currencyTokenAddr).transferFrom(address(this), msg.sender, optionPrice);
         // note: the originalOwner can hold for some time then withdraw or putOnStock() at some point
     }
 
     // a successful buyer can get the ownership (verified through state channel)
-    function newOwner(
+    function claimOptract(
         bytes32[] memory proof,
         bool[] memory isLeft,
         bytes32 targetLeaf,
         bytes32 merkleRoot
     ) public ethFilled isOnStock whenBeforeLastExerciseChance returns(bool) {
         // verify:  require(calculateLeaf(msg.sender, some_more_data...) == targetLeaf))
-        require(iBlockRegistry(blkAddr).merkleTreeValidator(proof, isLeft, targetLeaf, merkleRoot) == true, "invalid Merkle Proof");
+        // require(iBlockRegistry(blkAddr).merkleTreeValidator(proof, isLeft, targetLeaf, merkleRoot) == true, "invalid Merkle Proof");
         require(block.timestamp > actionTime + 2 hours, "cannot change ownership too soon");
+	require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= optionPrice + optionPrice/500);
         address prevOwner = currentOwner;
 
         // new owner
@@ -122,8 +128,8 @@ contract Optract {
         actionTime = block.timestamp;
 
         // the new owner transfer DAI to contract owner
-        iDAI.transfer(currentOwner, prevOwner, optionPrice);
-        iDAI.transfer(currentOwner, iBlockRegistry(blkAddr), optionPrice/500);  // 0.2% fee to block contract
+        ERC20(currencyTokenAddr).transferFrom(msg.sender, prevOwner, optionPrice);
+        // ERC20(currencyTokenAddr).transferFrom(msg.sender, iBlockRegistry(blkAddr), optionPrice/500);  // 0.2% fee to block contract
 
         return true;
     }
@@ -146,7 +152,7 @@ contract Optract {
         require(block.timestamp > actionTime + 2 hours, "");  // cannot withdraw right away
         onStock == false;
         exercised = true;
-        iDAI.transfer(currentOwner, ethSeller, totalPriceInDai);
+        ERC20(currencyTokenAddr).transferFrom(msg.sender, ethSeller, totalPriceInDai);
         msg.sender.transfer(address(this).balance);
         selfdestruct(msg.sender);
     }

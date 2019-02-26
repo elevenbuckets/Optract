@@ -13,12 +13,12 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 	bool public paused = false;
 
 	struct optractRecord {
-		address optractAddress;
 		uint expiredTime; // timestamp
 		uint since; // timestamp
 	}
 
-	mapping (uint => optractRecord) optractRecords;
+	mapping (uint => address) optractRecordsByIndex;
+	mapping (address => optractRecord) optractRecordsByAddress;
 
 	// Modifiers
 	modifier operatorOnly() {
@@ -46,10 +46,12 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 		Optract opt = new Optract(ETHAmount, totalPrice, address(this), msg.sender, blkAddr);
 		require(ERC20(currencyTokenAddr).transferFrom(msg.sender, address(opt), initialPayment));
 
-		optractRecord.optractAddress = address(opt);
-		optractRecord.expiredTime = block.timestamp + period;
-		optractRecord.since = block.timestamp;
+		optRcd.expiredTime = block.timestamp + period;
+		optRcd.since = block.timestamp;
+
 		totalOpts = totalOpts + 1;
+		optractRecordsByIndex[totalOpts] = address(opt); // mapping start from uint key = 1
+		optractRecordsByAddress[address(opt)] = optRcd;
 	}
 
 	// Constant functions
@@ -57,29 +59,47 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 		return initialPayment; 
 	}
 
+	function isExpired(address optractAddress) public view returns (bool) {
+		return block.timestamp > optractRecordsByAddress[optractAddress].expiredTime;
+	}
+
+	function getExpireTime() public view returns (uint) {
+		require(optractRecordsByAddress[msg.sender].expiredTime >= block.timestamp);
+		require(optractRecordsByAddress[msg.sender].since > 0);
+
+		return optractRecordsByAddress[msg.sender].expiredTime;
+	}
+
 	function activeOptracts(uint start, uint length) public view returns (
 		address[] memory addrlist, 
 		   uint[] memory expTimeList, 
 		   uint[] memory priceList, 
 		   uint[] memory ETHList,
-		   uint[] memory opriceList ) 
+		   uint[] memory opriceList, 
+		   bool[] memory filled	) 
 	{
 		require(start > 0 && length > 0);
-		require(totalOpts > 0);
+		require(totalOpts > 0 && totalOpts >= start);
 
-		if (start + length > totalOpts) {
+		if (start + length - 1 > totalOpts) {
 			length = totalOpts - start + 1;
 		}
 
 		for (uint i = start; i <= start + length - 1; i++) {
-			if (Optract(optractRecords[i].optractAddress).queryOnStock() == false) continue; // next
+			address optAddr = optractRecordsByIndex[i];
+			if (Optract(optAddr).queryOnStock() == false || optractRecordsByAddress[optAddr].expiredTime - 8 hours <= block.timestamp) continue;
 
-			// filling arrays
-			addrlist.push(optractRecords[i].optractAddress);
-			expTimeList.push(optractRecords[i].expiredTime);
-			priceList.push(Optract(optractRecords[i].optractAddress).queryOrderPrice());
-			ETHList.push(Optract(optractRecords[i].optractAddress).queryOrderSize());
-			opriceList.push(Optract(optractRecords[i].optractAddress).queryOptionPrice());
+			if (optAddr.balance == Optract(optAddr).queryOrderSize()) {
+				filled.push(true);
+			} else {
+				filled.push(false);
+			}
+
+			addrlist.push(optAddr);
+			expTimeList.push(optractRecordsByAddress[optAddr].expiredTime);
+			priceList.push(Optract(optAddr).queryOrderPrice());
+			ETHList.push(Optract(optAddr).queryOrderSize());
+			opriceList.push(Optract(optAddr).queryOptionPrice());
 		}
 	}
 }

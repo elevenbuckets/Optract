@@ -2,7 +2,7 @@ pragma solidity ^0.5.2;
 
 import "./ERC20.sol";
 import "./Optract.sol";
-import "./SafeMath.sol";
+//import "./SafeMath.sol";
 
 contract OptractRegistry { // PoC ETH-DAI Optract
 	address[3] public operators;
@@ -53,24 +53,33 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 	}
 
 	// Constant functions
+	function queryInitPrice() public view returns (uint) { 
+		return initialPayment; 
+	}
+
 	function activeOptracts(uint start, uint length) public view returns (
 		address[] memory addrlist, 
 		   uint[] memory expTimeList, 
 		   uint[] memory priceList, 
-		   uint[] memory ETHList ) 
-		{
-			require(start > 0 && length > 0);
-			require(totalOpts > 0);
+		   uint[] memory ETHList,
+		   uint[] memory opriceList ) 
+	{
+		require(start > 0 && length > 0);
+		require(totalOpts > 0);
 
-			if (start + length > totalOpts) {
-				length = totalOpts - start + 1;
-			}
-
-			for (uint i = start; i <= start + length - 1; i++) {
-				addrlist.push(optractRecords[i].optractAddress);
-				expTimeList.push(optractRecords[i].expiredTime);
-				priceList.push(Optract(optractRecords[i].optractAddress).queryOrderPrice());
-				ETHList.push(Optract(optractRecords[i].optractAddress).queryOrderSize());
-			}
+		if (start + length > totalOpts) {
+			length = totalOpts - start + 1;
 		}
+
+		for (uint i = start; i <= start + length - 1; i++) {
+			if (Optract(optractRecords[i].optractAddress).queryOnStock() == false) continue; // next
+
+			// filling arrays
+			addrlist.push(optractRecords[i].optractAddress);
+			expTimeList.push(optractRecords[i].expiredTime);
+			priceList.push(Optract(optractRecords[i].optractAddress).queryOrderPrice());
+			ETHList.push(Optract(optractRecords[i].optractAddress).queryOrderSize());
+			opriceList.push(Optract(optractRecords[i].optractAddress).queryOptionPrice());
+		}
+	}
 }

@@ -1,8 +1,8 @@
-var Registry = artifacts.require("./Registry.sol");
+var Registry = artifacts.require("./OptractRegistry.sol");
 var Optract  = artifacts.require("./Optract.sol");
 var ERC20 = artifacts.require("./ERC20.sol");
 var StandardToken = artifacts.require("./StandardToken.sol");
-var RNT = artifacts.require("./DAI.sol");
+var DAI = artifacts.require("./DAI.sol");
 var SafeMath = artifacts.require("./SafeMath.sol");
 
 module.exports = function(deployer) {
@@ -22,3 +22,4 @@ module.exports = function(deployer) {
 	.catch((err) => { console.trace(err) });
   })
   .catch((err) => { console.trace(err) });
+}

@@ -1,0 +1,13 @@
+{
+   "appName": "Erebor",
+   "artifactDir": "/home/kai/Work/project/11be/dapps/Optract/ABI",
+   "conditionDir": "/home/kai/Work/project/11be/dapps/Optract/Conditions",
+   "contracts": [{ "ctrName": "Optract", "conditions": ["Sanity"] },
+                 { "ctrName": "OptractRegistry", "conditions": ["Sanity"] }],
+   "account": "",
+   "database": "/home/kai/Work/project/11be/dapps/Optract/DB",
+   "networkID": 4,
+   "gamerBot": true,
+   "version": "1.0" 
+}
+

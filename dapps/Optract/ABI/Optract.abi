@@ -1,0 +1,396 @@
+[
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "exercised",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x14c68b1b"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "blkAddr",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x28f402b1"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "ethSeller",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x35b132f9"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "expired",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x4c2067c7"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "registryAddr",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x51da2eaa"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "optionPrice",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x7c479449"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "totalPriceInDai",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x9068f84a"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "currencyTokenAddr",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x91d622b9"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "onStock",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xb0d31bc8"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "currentOwner",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xb387ef92"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "ethAmount",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xc98166c0"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "period",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xef78d4fd"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "originalOwner",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xf1fffdcb"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "actionTime",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xf5e3fc30"
+  },
+  {
+    "inputs": [
+      {
+        "name": "_ethAmount",
+        "type": "uint256"
+      },
+      {
+        "name": "_totalPriceInDai",
+        "type": "uint256"
+      },
+      {
+        "name": "_registryAddr",
+        "type": "address"
+      },
+      {
+        "name": "_originalOwner",
+        "type": "address"
+      },
+      {
+        "name": "_blkAddr",
+        "type": "address"
+      },
+      {
+        "name": "_currencyTokenAddr",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "constructor",
+    "signature": "constructor"
+  },
+  {
+    "constant": false,
+    "inputs": [],
+    "name": "fillInEth",
+    "outputs": [],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function",
+    "signature": "0xc80bcf2e"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "proof",
+        "type": "bytes32[]"
+      },
+      {
+        "name": "isLeft",
+        "type": "bool[]"
+      },
+      {
+        "name": "targetLeaf",
+        "type": "bytes32"
+      },
+      {
+        "name": "merkleRoot",
+        "type": "bytes32"
+      }
+    ],
+    "name": "claimOptract",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x5d0a4cde"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_newOptionPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "putOnStock",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xb56fb337"
+  },
+  {
+    "constant": false,
+    "inputs": [],
+    "name": "currentOwnerExercise",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xd92fe2df"
+  },
+  {
+    "constant": false,
+    "inputs": [],
+    "name": "ethSellerWithdraw",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xd80cc009"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "queryOptionPrice",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x76f8dc8e"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "queryOrderPrice",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xb3fb9fc7"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "queryOrderSize",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xb02f0a5a"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "queryOnStock",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x070ee067"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "isFilled",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xcf444d9b"
+  }
+]

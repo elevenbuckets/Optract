@@ -50,7 +50,6 @@ contract Optract {
         onStock = true;  // for others to query
         currentOwner = _originalOwner;
         actionTime = block.timestamp;  // use this to avoid some too soon operations
-        optionPrice = iOptractRegistry(registryAddr).queryInitPrice();
     }
 
     modifier ownerOnly() {
@@ -101,6 +100,7 @@ contract Optract {
     function fillInEth() public payable whenNotExpired {
         require(ethSeller == address(0), "others fill ETH already");  // only one can fill in ETH
         require(msg.value == ethAmount, "need to deposit exact amount of ETH");
+        optionPrice = iOptractRegistry(registryAddr).queryInitPrice();
         ethSeller = msg.sender;
         actionTime = block.timestamp;
         onStock = false;

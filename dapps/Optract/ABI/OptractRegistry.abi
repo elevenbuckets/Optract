@@ -189,6 +189,10 @@
       {
         "name": "length",
         "type": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address"
       }
     ],
     "name": "activeOptracts",
@@ -221,6 +225,6 @@
     "payable": false,
     "stateMutability": "view",
     "type": "function",
-    "signature": "0xd8898862"
+    "signature": "0x6769f438"
   }
 ]

@@ -26,7 +26,7 @@ contract Optract {
     uint256 public optionPrice;
     uint256 public actionTime;  // right now, the actions are contract creation and newOwner()
     uint256 public period;  // length of time
-    bool public onStock = false;
+    bool public onStock;
     bool public expired = false;  // query "registry" to determine when to expire
     bool public exercised = false;
 
@@ -43,9 +43,10 @@ contract Optract {
         originalOwner = _originalOwner;
         blkAddr = _blkAddr;
 
+        onStock = true;  // for others to query
         currentOwner = _originalOwner;
         actionTime = block.timestamp;  // use this to avoid some too soon operations
-        optionPrice = registry(registryAddr).queryInitPrice();
+        optionPrice = iRegistry(registryAddr).queryInitPrice();
     }
 
     modifier ownerOnly() {
@@ -53,79 +54,104 @@ contract Optract {
         _;
     }
 
+    modifier ethFilled() {
+        require (ethSeller != address(0) && address(this).balance > 0);
+    }
+
     modifier isOnStock() {
         require(onStock == true, "not on stock");
         _;
     }
 
-    modifier isExpired() {
-        require(registry(registryAddr).isExpired == true, "can no longer excercise");
+    modifier whenExpired() {
+        require(iRegistry(registryAddr).isExpired(address(this)) == true, "can no longer excercise");
         _;
     }
 
-    modifier isNotExpired() {
-        require(registry(registryAddr).isExpired == false, "now can excercise");
+    modifier whenNotExpired() {
+        require(iRegistry(registryAddr).isExpired(address(this)) == false, "now can excercise");
         _;
     }
 
+    // modifier whenLastExerciseChance() {
+    //     uint256 expireTime = iRegistry(registryAddr).getExpireTime();
+    //     require(block.timestamp >= expireTime - 8 hours && block.timestamp < expireTime);
+    //     _;
+    // }
+
+    modifier whenBeforeLastExerciseChance() {
+        uint256 expireTime = iRegistry(registryAddr).getExpireTime();
+        require(block.timestamp < expireTime - 8 hours);
+        _;
+    }
+
+    modifier whenCanExercise() {
+        uint256 expireTime = iRegistry(registryAddr).getExpireTime();
+        require((onStock == false && block.timestamp < expireTime)
+                || (block.timestamp >= expireTime - 8 hours && block.timestamp < expireTime)
+               );
+        _;
+    }
     // after construct, need a ethSeller to fill in ETH, and the ethSeller obtain DAI
-    function fillInEth() public payable {
+    function fillInEth() public payable whenNotExpired {
         require(ethSeller == address(0), "others fill ETH already");  // only one can fill in ETH
         require(msg.value == ethAmount, "need to deposit exact amount of ETH");
         ethSeller = msg.sender;
         actionTime = block.timestamp;
-        iDAI.transfer(originalOwner, msg.sender, optionPrice);
+        onStock = false;
+        // address(this) get 5 DAI (the fix optionPrice for 1st trade) from originalOwner in 'Registry' contract
+        iDAI.transfer(address(this), msg.sender, optionPrice);
+        // note: the originalOwner can hold for some time then withdraw or putOnStock() at some point
     }
 
-    // a successful buyer get the ownership (verified through state channel)
+    // a successful buyer can get the ownership (verified through state channel)
     function newOwner(
         bytes32[] memory proof,
         bool[] memory isLeft,
         bytes32 targetLeaf,
         bytes32 merkleRoot
-    ) public isOnStock returns(bool) {
-        // verify: from msg.sender generate the corresponding targetLeaf
+    ) public ethFilled isOnStock whenBeforeLastExerciseChance returns(bool) {
+        // verify:  require(calculateLeaf(msg.sender, some_more_data...) == targetLeaf))
         require(iBlockRegistry(blkAddr).merkleTreeValidator(proof, isLeft, targetLeaf, merkleRoot) == true, "invalid Merkle Proof");
         require(block.timestamp > actionTime + 2 hours, "cannot change ownership too soon");
         address prevOwner = currentOwner;
-        uint dealPrice = optionPrice;
 
         // new owner
-        onStock = false;
+        onStock = false;  // has to call putOnStock() to make it on stock
         currentOwner = msg.sender;
-        optionPrice = newPrice;
+        actionTime = block.timestamp;
 
         // the new owner transfer DAI to contract owner
-        iDAI.transfer(currentOwner, prevOwner, dealPrice);
-        iDAI.transfer(currentOwner, iBlockRegistry(blkAddr), dealPrice/500);  // 0.2% fee to block contract
+        iDAI.transfer(currentOwner, prevOwner, optionPrice);
+        iDAI.transfer(currentOwner, iBlockRegistry(blkAddr), optionPrice/500);  // 0.2% fee to block contract
 
         return true;
     }
 
-    function putOnStock(uint256 _newOptionPrice) public ownerOnly {
+    function putOnStock(uint256 _newOptionPrice) public ethFilled ownerOnly whenBeforeLastExerciseChance {
         // call it when a buyer want to sell the option
         require(onStock == false, "can only put on Stock once");
         onStock = true;
-        newPrice = _newOptionPrice;
+        optionPrice = _newOptionPrice;
     }
 
-    function setNewOptionPrice(uint newPrice) public ownerOnly {
-        // add a time restriction?
-        optionPrice = newPrice;
-    }
+    // function setNewOptionPrice(uint newPrice) public ownerOnly {
+    //     // any restrictions?
+    //     optionPrice = newPrice;
+    // }
 
     // two ways to end this contract:
-    //   (isNotExpired) the last owner pay DAI and withdraw ETH or (expired) ethSeller take ETH back
-    function currentOwnerExercise() public ownerOnly isNotExpired {
-        onStock = false;
+    //   (whenNotExpired) the last owner pay DAI and withdraw ETH or (whenExpired) ethSeller take ETH back
+    function currentOwnerExercise() public ownerOnly whenCanExercise {
+        require(block.timestamp > actionTime + 2 hours, "");  // cannot withdraw right away
+        onStock == false;
         exercised = true;
-        // require(block.timestamp > actionTime + 2 hours, "");  // cannot withdraw right away
         iDAI.transfer(currentOwner, ethSeller, totalPriceInDai);
         msg.sender.transfer(address(this).balance);
         selfdestruct(msg.sender);
     }
 
-    function ethSellerWithdraw() public expired {
+    function ethSellerWithdraw() public whenExpired {
         // if the contract owner don't exercise, ethSeller get the eth back
         require(msg.sender == ethSeller, "only ethSeller can call it");
         require(exercised == false, "already exercised");
@@ -149,6 +175,10 @@ contract Optract {
 
     function queryOnStock() public returns (bool) {
         return onStock;
+    }
+
+    function isFilled() public returns (bool) {
+        return (ethSeller != address(0) && address(this).balance > 0);
     }
 
 }

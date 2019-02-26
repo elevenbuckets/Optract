@@ -16,21 +16,24 @@ class Optract extends BladeIronClient {
 	        this.ctrName = 'OptractRegistry';
 
                 this.createOptract = (ethAmount, totalPrice, period) => {
-                        return this.sendTk(this.ctrName)('createOptract')(ethAmount, totalPrice, period).then((rc) => {
-                                console.log(rc)
+                        return this.sendTk('ERC20')('approve')(optractAddr, valueDai)().then(()=>{
+                                return this.sendTk(this.ctrName)('createOptract')(ethAmount, totalPrice, period).then((rc) => {
+                                        console.log(rc)
+                                })
                         })
                 }
 
                 this.queryInitPrice = () => {
-                        return this.call(this.ctrName)('queryInitPrice')().then((rc) => {return(rc)});
+                        this.initialPayment = this.call(this.ctrName)('queryInitPrice')().then((rc) => {return(rc)});
+                        return this.initialPayment;
                 }
 
                 this.isExpired = (optractAddr) => {
                         return this.call(this.ctrName)('isExpired')(optractAddr).then((rc) => {return(rc)});
                 }
 
-                this.activeOptracts = (start, length) => {
-                        return this.call(this.ctrName)('activeOptracts')(start, length).then((rc) => {return(rc)});
+                this.activeOptracts = (start, length, ownerAddr) => {
+                        return this.call(this.ctrName)('activeOptracts')(start, length, ownerAddr).then((rc) => {return(rc)});
                 }
 
         }

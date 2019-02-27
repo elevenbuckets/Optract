@@ -1645,12 +1645,12 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0x71c86a556AFbe89c4476705662E324A3104d0619",
-      "transactionHash": "0x0b04429e35bfec9e77fd32edb97cdc34029e28c623cd4c081dea54d18b3f14d8"
+      "address": "0x304F30DA9a6F1C2ac315E59D08E6c47cD3eC0908",
+      "transactionHash": "0x2c55d3d9a980e7fbf154d962d92a640f5c8fdae27ddd1a9111254d0970c425ab"
     }
   },
   "schemaVersion": "3.0.1",
-  "updatedAt": "2019-02-26T21:50:03.562Z",
+  "updatedAt": "2019-02-27T03:07:19.155Z",
   "devdoc": {
     "methods": {
       "allowance(address,address)": {

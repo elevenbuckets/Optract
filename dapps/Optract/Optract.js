@@ -16,16 +16,29 @@ class Optract extends BladeIronClient {
 	        this.ctrName = 'OptractRegistry';
 
                 this.createOptract = (ethAmount, totalPrice, period) => {
-                        return this.sendTk('ERC20')('approve')(optractAddr, valueDai)().then(()=>{
-                                return this.sendTk(this.ctrName)('createOptract')(ethAmount, totalPrice, period).then((rc) => {
-                                        console.log(rc)
+                        if (typeof(this.initialPayment) === 'undefined') {
+                                return this.queryInitPrice().then( () => {
+                                        return this.sendTk('DAI')('approve')(this.ctrAddrBook['OptractRegistry'], this.initialPayment)().then((qid1)=>{
+					        console.log(`DEBUG: QID1 = ${qid1}`);
+                                                return this.sendTk(this.ctrName)('createOptract')(ethAmount, totalPrice, period)().then((qid2) => {
+					                console.log(`DEBUG: QID2 = ${qid2}`);
+                                                }).catch((err)=>{console.trace(err)})
+                                        }).catch((err)=>{console.trace(err)})
                                 })
-                        })
+                        } else {
+                                return this.sendTk('DAI')('approve')(this.ctrAddrBook['OptractRegistry'], this.initialPayment)().then((qid1)=>{
+					console.log(`DEBUG: QID = ${qid1}`);
+                                        return this.sendTk(this.ctrName)('createOptract')(ethAmount, totalPrice, period)().then((qid2) => {
+					        console.log(`DEBUG: QID = ${qid2}`);
+                                        })
+                                })
+                        }
                 }
 
                 this.queryInitPrice = () => {
-                        this.initialPayment = this.call(this.ctrName)('queryInitPrice')().then((rc) => {return(rc)});
-                        return this.initialPayment;
+                        return this.call(this.ctrName)('queryInitPrice')().then((rc) => {
+                                this.initialPayment = rc
+                        })
                 }
 
                 this.isExpired = (optractAddr) => {

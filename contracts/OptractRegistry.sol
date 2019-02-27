@@ -39,14 +39,14 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 
 	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period) external notPaused {
 		require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= initialPayment);
-		require(period >= 30 days && period <= 365 days);
+		require(period * 1 days >= 30 days && period * 1 days <= 365 days);
 		require(ETHAmount >= 3 ether);
 
 		optractRecord memory optRcd;
 		Optract opt = new Optract(ETHAmount, totalPrice, address(this), msg.sender, blkAddr, currencyTokenAddr);
 		require(ERC20(currencyTokenAddr).transferFrom(msg.sender, address(opt), initialPayment));
 
-		optRcd.expiredTime = block.timestamp + period;
+		optRcd.expiredTime = block.timestamp + period * 1 days;
 		optRcd.initialOwner = msg.sender;
 
 		totalOpts = totalOpts + 1;

@@ -91,12 +91,12 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 	}
 
 	function activeOptracts(uint start, uint length, address owner) public view returns (
-		address[] memory addrlist, 
-		   uint[] memory expTimeList, 
-		   uint[] memory priceList, 
-		   uint[] memory ETHList,
-		   uint[] memory opriceList, 
-		   bool[] memory filled	) 
+		address[] memory,
+		   uint[] memory,
+		   uint[] memory,
+		   uint[] memory,
+		   uint[] memory )
+		   // bool[] memory )
 	{
 		require(start > 0 && length > 0);
 		require(totalOpts > 0 && totalOpts >= start);
@@ -105,41 +105,52 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 			length = totalOpts - start + 1;
 		}
 
+		address[] memory addrlist = new address[](length);
+		uint[] memory expTimeList= new uint[](length);
+		uint[] memory priceList = new uint[](length);
+		uint[] memory ETHList = new uint[](length);
+		uint[] memory opriceList = new uint[](length);
+		// bool[] memory filled = new bool[](length);
+
 		if (owner == address(0)) { // list all orders
 			for (uint i = start; i <= start + length - 1; i++) {
-				address optAddr = optractRecordsByIndex[i];
-				if (Optract(optAddr).queryOnStock() == false || optractRecordsByAddress[optAddr].expiredTime - 8 hours <= block.timestamp) continue;
+				// address optAddr = optractRecordsByIndex[i];
+				if (Optract(optractRecordsByIndex[i]).queryOnStock() == false || optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime - 8 hours <= block.timestamp) continue;
 	
-				if (optAddr.balance == Optract(optAddr).queryOrderSize()) {
-					filled[i-start] = true;
-				} else {
-					filled[i-start] = false;
-				}
+				// if (optractRecordsByIndex[i].balance == Optract(optractRecordsByIndex[i]).queryOrderSize()) {
+				// 	filled[i-start] = true;
+				// } else {
+				// 	filled[i-start] = false;
+				// }
 	
-				addrlist[i-start] = optAddr;
-				expTimeList[i-start] = optractRecordsByAddress[optAddr].expiredTime;
-				priceList[i-start] = Optract(optAddr).queryOrderPrice();
-				ETHList[i-start] = Optract(optAddr).queryOrderSize();
-				opriceList[i-start] = Optract(optAddr).queryOptionPrice();
+				addrlist[i-start] = optractRecordsByIndex[i];
+				expTimeList[i-start] = optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime;
+				priceList[i-start] = Optract(optractRecordsByIndex[i]).queryOrderPrice();
+				ETHList[i-start] = Optract(optractRecordsByIndex[i]).queryOrderSize();
+				opriceList[i-start] = Optract(optractRecordsByIndex[i]).queryOptionPrice();
 			}
 		} else { // list only those initialized by owner
 			for (uint i = start; i <= start + length - 1; i++) {
-				address optAddr = optractRecordsByIndex[i];
-				if (optractRecordsByAddress[optAddr].initialOwner != owner) continue;
-				if (Optract(optAddr).queryOnStock() == false || optractRecordsByAddress[optAddr].expiredTime - 8 hours <= block.timestamp) continue;
+				// address optAddr = optractRecordsByIndex[i];
+				if (optractRecordsByAddress[optractRecordsByIndex[i]].initialOwner != owner) continue;
+				if (Optract(optractRecordsByIndex[i]).queryOnStock() == false || optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime - 8 hours <= block.timestamp) continue;
 	
-				if (optAddr.balance == Optract(optAddr).queryOrderSize()) {
-					filled[i-start] = true;
-				} else {
-					filled[i-start] = false;
-				}
+				// if (optractRecordsByIndex[i].balance == Optract(optractRecordsByIndex[i]).queryOrderSize()) {
+				// 	filled[i-start] = true;
+				// } else {
+				// 	filled[i-start] = false;
+				// }
 	
-				addrlist[i-start] = optAddr;
-				expTimeList[i-start] = optractRecordsByAddress[optAddr].expiredTime;
-				priceList[i-start] = Optract(optAddr).queryOrderPrice();
-				ETHList[i-start] = Optract(optAddr).queryOrderSize();
-				opriceList[i-start] = Optract(optAddr).queryOptionPrice();
+				addrlist[i-start] = optractRecordsByIndex[i];
+				expTimeList[i-start] = optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime;
+				priceList[i-start] = Optract(optractRecordsByIndex[i]).queryOrderPrice();
+				ETHList[i-start] = Optract(optractRecordsByIndex[i]).queryOrderSize();
+				opriceList[i-start] = Optract(optractRecordsByIndex[i]).queryOptionPrice();
 			}
 		}
+
+		return (addrlist, expTimeList, priceList, ETHList, opriceList);
+		// return (addrlist, expTimeList, priceList, ETHList, opriceList, filled);
+		// return (addrlist, expTimeList, priceList, ETHList, filled);
 	}
 }

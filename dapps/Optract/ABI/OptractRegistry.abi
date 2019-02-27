@@ -285,28 +285,24 @@
     "name": "activeOptracts",
     "outputs": [
       {
-        "name": "addrlist",
+        "name": "",
         "type": "address[]"
       },
       {
-        "name": "expTimeList",
+        "name": "",
         "type": "uint256[]"
       },
       {
-        "name": "priceList",
+        "name": "",
         "type": "uint256[]"
       },
       {
-        "name": "ETHList",
+        "name": "",
         "type": "uint256[]"
       },
       {
-        "name": "opriceList",
+        "name": "",
         "type": "uint256[]"
-      },
-      {
-        "name": "filled",
-        "type": "bool[]"
       }
     ],
     "payable": false,

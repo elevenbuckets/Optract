@@ -47,6 +47,21 @@
   {
     "constant": true,
     "inputs": [],
+    "name": "debug2",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x5ba88c28"
+  },
+  {
+    "constant": true,
+    "inputs": [],
     "name": "paused",
     "outputs": [
       {
@@ -62,6 +77,36 @@
   {
     "constant": true,
     "inputs": [],
+    "name": "debug3",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x610da891"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "debug1",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x7dc7c5a5"
+  },
+  {
+    "constant": true,
+    "inputs": [],
     "name": "currencyTokenAddr",
     "outputs": [
       {
@@ -73,6 +118,21 @@
     "stateMutability": "view",
     "type": "function",
     "signature": "0x91d622b9"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "debug4",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xb70902bc"
   },
   {
     "constant": true,
@@ -105,6 +165,33 @@
     "stateMutability": "nonpayable",
     "type": "constructor",
     "signature": "constructor"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_debug1",
+        "type": "bool"
+      },
+      {
+        "name": "_debug2",
+        "type": "bool"
+      },
+      {
+        "name": "_debug3",
+        "type": "bool"
+      },
+      {
+        "name": "_debug4",
+        "type": "bool"
+      }
+    ],
+    "name": "setDebugParams",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x37435e6c"
   },
   {
     "constant": false,

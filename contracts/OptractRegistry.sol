@@ -37,21 +37,41 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 		currencyTokenAddr = _currencyTokenAddr;
 	}
 
+        bool public debug1 = false;
+        bool public debug2 = false;
+        bool public debug3 = false;
+        bool public debug4 = true;
+        function setDebugParams(bool _debug1, bool _debug2, bool _debug3, bool _debug4) public {
+                debug1 = _debug1;
+                debug2 = _debug2;
+                debug3 = _debug3;
+                debug4 = _debug4;
+        }
+
 	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period) external notPaused {
-		require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= initialPayment);
-		require(period * 1 days >= 30 days && period * 1 days <= 365 days);
-		require(ETHAmount >= 3 ether);
+	        if (debug1){
+                    require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= initialPayment);
+                }
+                if (debug2){
+                    require(period * 1 days >= 30 days && period * 1 days <= 365 days);
+                }
+                if (debug3){
+                    require(ETHAmount >= 3 ether);
+                }
 
 		optractRecord memory optRcd;
-		Optract opt = new Optract(ETHAmount, totalPrice, address(this), msg.sender, blkAddr, currencyTokenAddr);
-		require(ERC20(currencyTokenAddr).transferFrom(msg.sender, address(opt), initialPayment));
+                Optract opt = new Optract(ETHAmount, totalPrice, address(this), msg.sender, blkAddr, currencyTokenAddr);
 
-		optRcd.expiredTime = block.timestamp + period * 1 days;
-		optRcd.initialOwner = msg.sender;
+                if (debug4) {
+                    require(ERC20(currencyTokenAddr).transferFrom(msg.sender, address(opt), initialPayment));
+                }
 
-		totalOpts = totalOpts + 1;
-		optractRecordsByIndex[totalOpts] = address(opt); // mapping start from uint key = 1
-		optractRecordsByAddress[address(opt)] = optRcd;
+                optRcd.expiredTime = block.timestamp + period * 1 days;
+                optRcd.initialOwner = msg.sender;
+
+                totalOpts = totalOpts + 1;
+                optractRecordsByIndex[totalOpts] = address(opt); // mapping start from uint key = 1
+                optractRecordsByAddress[address(opt)] = optRcd;
 	}
 
 	// Constant functions

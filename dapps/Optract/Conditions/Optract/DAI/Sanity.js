@@ -7,8 +7,8 @@ module.exports =
 		let gasCost = this.gasCostEst(addr, jobObj.txObj);
 
 		if (
-			this.CUE['OptractRegistry'][jobObj.contract].balanceOf(addr).gte(tokenUnits)
-		     && this.CUE['OptractRegistry'][jobObj.contract].allowance(addr, exchange).lte(tokenUnits)
+			this.CUE['Optract'][jobObj.contract].balanceOf(addr).gte(tokenUnits)
+		     && this.CUE['Optract'][jobObj.contract].allowance(addr, exchange).lte(tokenUnits)
 		     && this.web3.eth.getBalance(addr).gte(gasCost)
 		   ) {
 			   return true;
@@ -25,12 +25,24 @@ module.exports =
 		let gasCost = this.gasCostEst(addr, jobObj.txObj);
 
 		if (
-			this.CUE['OptractRegistry'][jobObj.contract].balanceOf(addr).gte(tokenUnits)
+			this.CUE['Optract'][jobObj.contract].balanceOf(addr).gte(tokenUnits)
 		     && this.web3.eth.getBalance(addr).gte(gasCost)
 		) {
 			return true;
 		} else {
 			return false;
 		}
-	}
+        },
+
+        DAI_transferFrom_sanity(addr, jobObj) 
+	{
+		// transferFrom(fromAddr,toAddr,amount)
+	        // add something here? 
+                return true;
+        },
+
+        DAI_allowance_sanity(addr, jobObj)
+        {
+                return true;
+        }
 }

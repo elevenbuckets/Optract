@@ -19,5 +19,9 @@ module.exports =
 	OptractRegistry_activeOptracts_sanity(addr, jobObj) 
 	{
 		return true;
+	},
+	OptractRegistry_setDebugParams_sanity(addr, jobObj) 
+	{
+		return true;
 	}
 }

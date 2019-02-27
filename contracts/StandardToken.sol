@@ -64,9 +64,9 @@ contract StandardToken is ERC20 {
         require(value <= _allowed[from][msg.sender]);
         require(value <= _balances[from]);
         require(to != address(0));
-        _balances[msg.sender] = _balances[msg.sender].sub(value);
+        _balances[from] = _balances[from].sub(value);
         _balances[to] = _balances[to].add(value);
-        emit Transfer(msg.sender, to, value);
+        emit Transfer(from, to, value);
         return true;
     }
 }

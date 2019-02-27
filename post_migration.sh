@@ -6,4 +6,5 @@ cp build/contracts/Optract.json build/contracts/OptractRegistry.json build/contr
      jq -r '.abi' OptractRegistry.json > OptractRegistry.abi && \
      jq -r '.abi' DAI.json > DAI.abi
 
+echo $?
 echo "# copy artifact and abi to dapps directory"

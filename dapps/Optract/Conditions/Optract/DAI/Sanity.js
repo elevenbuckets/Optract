@@ -7,13 +7,15 @@ module.exports =
 		let gasCost = this.gasCostEst(addr, jobObj.txObj);
 
 		if (
-			this.CUE['Optract'][jobObj.contract].balanceOf(addr).gte(tokenUnits)
-		     && this.CUE['Optract'][jobObj.contract].allowance(addr, exchange).lte(tokenUnits)
+			this.CUE['Optract'][jobObj.contract].balanceOf(addr).gte(Number(tokenUnits))
+		     && this.CUE['Optract'][jobObj.contract].allowance(addr, exchange).gte(Number(tokenUnits))
 		     && this.web3.eth.getBalance(addr).gte(gasCost)
 		   ) {
 			   return true;
 		   } else {
-			   console.log('WARNING: condition failed!')
+                       console.log('WARNING: condition failed!');
+                        console.dir(jobObj);
+		            console.log('debuggg: tokens:' + tokenUnits);
 			   return false;
 		   }
 	},
@@ -25,7 +27,7 @@ module.exports =
 		let gasCost = this.gasCostEst(addr, jobObj.txObj);
 
 		if (
-			this.CUE['Optract'][jobObj.contract].balanceOf(addr).gte(tokenUnits)
+			this.CUE['Optract'][jobObj.contract].balanceOf(addr).gte(Number(tokenUnits))
 		     && this.web3.eth.getBalance(addr).gte(gasCost)
 		) {
 			return true;

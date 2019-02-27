@@ -37,9 +37,9 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 		currencyTokenAddr = _currencyTokenAddr;
 	}
 
-        bool public debug1 = false;
-        bool public debug2 = false;
-        bool public debug3 = false;
+        bool public debug1 = true;
+        bool public debug2 = true;
+        bool public debug3 = true;
         bool public debug4 = true;
         function setDebugParams(bool _debug1, bool _debug2, bool _debug3, bool _debug4) public {
                 debug1 = _debug1;

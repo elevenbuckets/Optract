@@ -43,7 +43,17 @@ class Optract extends BladeIronClient {
                 }
 
                 this.activeOptracts = (start, length, ownerAddr) => {
-                        return this.call(this.ctrName)('activeOptracts')(start, length, ownerAddr).then((rc) => {return(rc)});
+                        return this.call(this.ctrName)('activeOptracts')(start, length, ownerAddr).then((rc1) => {
+                                return this.call(this.ctrName)('activeOptractsFilledStatus')(start, length, ownerAddr).then((rc2) => {
+                                        // compare rc1[0] and rc2[0], i.e., the address of contracts
+                                        if (rc1[0].length === rc2[0].length && rc1[0].every(function(value, index) { return value === rc2[0][index]})) {
+                                                rc1.push(rc2[1]);  // rc2[1] is the "filled" status
+                                        } else {
+                                                console.log("error in query filled status, skip that part")
+                                        }
+                                        return rc1;
+                                })
+                        })
                 }
 
         }

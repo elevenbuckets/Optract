@@ -309,5 +309,37 @@
     "stateMutability": "view",
     "type": "function",
     "signature": "0x6769f438"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "name": "length",
+        "type": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "activeOptractsFilledStatus",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]"
+      },
+      {
+        "name": "",
+        "type": "bool[]"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x4b140961"
   }
 ]

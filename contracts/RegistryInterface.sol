@@ -11,7 +11,10 @@ interface iOptractRegistry { // PoC ETH-DAI Optract
 		   uint[] memory expTimeList, 
 		   uint[] memory priceList, 
 		   uint[] memory ETHList,
-		   uint[] memory opriceList, 
+		   uint[] memory opriceList
+	);
+	function activeOptractsFilledStatus(uint start, uint length, address owner) external view returns (
+		address[] memory addrlist, 
 		   bool[] memory filled
 	);
 }

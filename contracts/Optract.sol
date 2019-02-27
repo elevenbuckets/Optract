@@ -105,7 +105,7 @@ contract Optract {
         actionTime = block.timestamp;
         onStock = false;
         // address(this) get 5 DAI (the fix optionPrice for 1st trade) from originalOwner in 'Registry' contract
-        ERC20(currencyTokenAddr).transferFrom(address(this), msg.sender, optionPrice);
+        ERC20(currencyTokenAddr).transfer(msg.sender, optionPrice);
         // note: the originalOwner can hold for some time then withdraw or putOnStock() at some point
     }
 

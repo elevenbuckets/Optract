@@ -20,6 +20,10 @@ module.exports =
 	{
 		return true;
 	},
+	OptractRegistry_activeOptractsFilledStatus_sanity(addr, jobObj) 
+	{
+		return true;
+	},
 	OptractRegistry_setDebugParams_sanity(addr, jobObj) 
 	{
 		return true;

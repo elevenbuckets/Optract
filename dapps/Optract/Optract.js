@@ -22,7 +22,13 @@ class Optract extends BladeIronClient {
                                 this.getTkObj(this.ctrName)('createOptract')(ethAmount, totalPrice, period)()
                         ];
                         return Promise.all(p).then((plist) => {
-                                return this.processJobs(plist.slice(1));
+                                return this.processJobs(plist.slice(1)).then((QID) => {
+					return this.getReceipts(QID).then((QIDlist) => {
+                                                if (QIDlist[0].status !== '0x1') throw "failed to approve";
+                                                if (QIDlist[1].status !== '0x1') throw "failed to create optract";
+                                                return {'QIDlist': QIDlist, 'txHash': QIDlist[1].transactionHash};
+                                        });
+                                })
                         })
                 }
 

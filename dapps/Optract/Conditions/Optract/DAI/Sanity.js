@@ -8,15 +8,14 @@ module.exports =
 
 		if (
 			this.CUE['Optract'][jobObj.contract].balanceOf(addr).gte(Number(tokenUnits))
-		     && this.CUE['Optract'][jobObj.contract].allowance(addr, exchange).gte(Number(tokenUnits))
 		     && this.web3.eth.getBalance(addr).gte(gasCost)
 		   ) {
-			   return true;
+			    return true;
 		   } else {
-                       console.log('WARNING: condition failed!');
-                        console.dir(jobObj);
-		            console.log('debuggg: tokens:' + tokenUnits);
-			   return false;
+                            console.log('WARNING: condition failed!');
+                            console.dir(jobObj);
+                            console.log('debuggg: tokens:' + tokenUnits);
+                            return false;
 		   }
 	},
 

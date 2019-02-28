@@ -20,7 +20,7 @@ module.exports =
 	{
 		return true;
 	},
-	OptractRegistry_activeOptractsFilledStatus_sanity(addr, jobObj) 
+	OptractRegistry_inactiveOptracts_sanity(addr, jobObj) 
 	{
 		return true;
 	},

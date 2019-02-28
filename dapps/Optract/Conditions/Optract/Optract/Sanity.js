@@ -1,5 +1,6 @@
 module.exports = 
 {
+	GROUP_CONDITION: 'Optract',
 	Optract_fillInEth_sanity(addr, jobObj) 
 	{
 		return true;

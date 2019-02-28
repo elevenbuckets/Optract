@@ -39,8 +39,11 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 
 	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period) external notPaused {
                 require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= initialPayment);
-                require(period * 1 days >= 30 days && period * 1 days <= 365 days);
-                require(ETHAmount >= 3 ether);
+                // require(period * 1 days >= 30 days && period * 1 days <= 365 days);
+                // require(ETHAmount >= 3 ether);
+                // for debug purpose, use ridiculously small values:
+                require(period * 1 days >= 1 days && period * 1 days <= 365 days);
+                require(ETHAmount >= 3 wei);
 
 		optractRecord memory optRcd;
                 Optract opt = new Optract(ETHAmount, totalPrice, address(this), msg.sender, blkAddr, currencyTokenAddr);
@@ -213,48 +216,81 @@ contract OptractRegistry { // PoC ETH-DAI Optract
         }
 
 
+        function _getNumOfInActiveOptracts(uint start, uint length, address owner) public view returns (uint) {
+	        // will be internal function so don't check requirements
+	        uint inactiveLength = 0;
+		if (start + length - 1 > totalOpts) {
+			length = totalOpts - start + 1;
+		}
+
+		if (owner == address(0)) { // list all orders
+			for (uint i = start; i <= start + length - 1; i++) {
+				if (Optract(optractRecordsByIndex[i]).queryOnStock() == false
+				    || optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime - 8 hours <= block.timestamp)
+				{
+				        inactiveLength +=1;
+                                }
+	
+			}
+		} else { // list only those initialized by owner
+			for (uint i = start; i <= start + length - 1; i++) {
+				if (optractRecordsByAddress[optractRecordsByIndex[i]].initialOwner != owner) continue;
+				if (Optract(optractRecordsByIndex[i]).queryOnStock() == false
+				    || optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime - 8 hours <= block.timestamp)
+                                {
+				        inactiveLength += 1;
+                                }
+			}
+		}
+		return inactiveLength;
+        }
+
         function inactiveOptractsLoop(uint start, uint length, address owner, uint8 _idx) public view returns (uint[] memory) {
                 require(_idx >= 1 && _idx <= 4, "unknow optract chracteristics");
                 // _idx: {1: expTimeList, 2: priceList, 3:ETHList, 4: opriceList}
 		if (start + length - 1 > totalOpts) {
 			length = totalOpts - start + 1;
 		}
-                uint inactiveLength = length - _getNumOfActiveOptracts(start, length, owner);
+                uint inactiveLength = _getNumOfInActiveOptracts(start, length, owner);
 		uint[] memory returnList = new uint[](inactiveLength);
 		if (inactiveLength == 0) return (returnList);
 		uint count = 0;
 
 		if (owner == address(0)) { // list all orders
 			for (uint i = start; i <= start + length - 1; i++) {
-				if (Optract(optractRecordsByIndex[i]).queryOnStock() == true
-				    || optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime - 8 hours > block.timestamp) continue;
-	
-	                        if (_idx == 1) {
-                                        returnList[count] = optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime;
-                                } else if (_idx == 2) {
-                                        returnList[count] = Optract(optractRecordsByIndex[i]).queryOrderPrice();
-                                } else if (_idx == 3) {
-				        returnList[count] = Optract(optractRecordsByIndex[i]).queryOrderSize();
-                                } else if (_idx == 4) {
-                                        returnList[count] = Optract(optractRecordsByIndex[i]).queryOptionPrice();
+				if (Optract(optractRecordsByIndex[i]).queryOnStock() == false
+				    || optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime - 8 hours <= block.timestamp)
+
+				{
+                                        if (_idx == 1) {
+                                                returnList[count] = optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime;
+                                        } else if (_idx == 2) {
+                                                returnList[count] = Optract(optractRecordsByIndex[i]).queryOrderPrice();
+                                        } else if (_idx == 3) {
+                                                returnList[count] = Optract(optractRecordsByIndex[i]).queryOrderSize();
+                                        } else if (_idx == 4) {
+                                                returnList[count] = Optract(optractRecordsByIndex[i]).queryOptionPrice();
+                                        }
+                                        count += 1;
                                 }
-				count += 1;
 			}
 		} else { // list only those initialized by owner
 			for (uint i = start; i <= start + length - 1; i++) {
 				if (optractRecordsByAddress[optractRecordsByIndex[i]].initialOwner != owner) continue;
-				if (Optract(optractRecordsByIndex[i]).queryOnStock() == true
-				    || optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime - 8 hours > block.timestamp) continue;
-	                        if (_idx == 1) {
-                                        returnList[count] = optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime;
-                                } else if (_idx == 2) {
-                                        returnList[count] = Optract(optractRecordsByIndex[i]).queryOrderPrice();
-                                } else if (_idx == 3) {
-				        returnList[count] = Optract(optractRecordsByIndex[i]).queryOrderSize();
-                                } else if (_idx == 4) {
-                                        returnList[count] = Optract(optractRecordsByIndex[i]).queryOptionPrice();
+				if (Optract(optractRecordsByIndex[i]).queryOnStock() == false
+				    || optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime - 8 hours <= block.timestamp)
+                                {
+                                        if (_idx == 1) {
+                                                returnList[count] = optractRecordsByAddress[optractRecordsByIndex[i]].expiredTime;
+                                        } else if (_idx == 2) {
+                                                returnList[count] = Optract(optractRecordsByIndex[i]).queryOrderPrice();
+                                        } else if (_idx == 3) {
+                                                returnList[count] = Optract(optractRecordsByIndex[i]).queryOrderSize();
+                                        } else if (_idx == 4) {
+                                                returnList[count] = Optract(optractRecordsByIndex[i]).queryOptionPrice();
+                                        }
+                                        count += 1;
                                 }
-				count += 1;
 			}
 		}
 		return returnList;
@@ -266,7 +302,7 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 			length = totalOpts - start + 1;
 		}
 
-                uint inactiveLength = length - _getNumOfActiveOptracts(start, length, owner);
+                uint inactiveLength = _getNumOfInActiveOptracts(start, length, owner);
 		address[] memory addrlist = new address[](inactiveLength);
 		bool[] memory filled = new bool[](inactiveLength);
 		if (inactiveLength == 0) return (addrlist, filled);
@@ -275,31 +311,34 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 		if (owner == address(0)) { // list all orders
 			for (uint i = start; i <= start + length - 1; i++) {
 				address optAddr = optractRecordsByIndex[i];
-				if (Optract(optAddr).queryOnStock() == true
-				    || optractRecordsByAddress[optAddr].expiredTime - 8 hours > block.timestamp) continue;
-	
-				if (optAddr.balance == Optract(optAddr).queryOrderSize()) {
-					filled[count] = true;
-				} else {
-					filled[count] = false;
-				}
-				addrlist[count] = optAddr;
-				count += 1;
+				if (Optract(optAddr).queryOnStock() == false
+				    || optractRecordsByAddress[optAddr].expiredTime - 8 hours <= block.timestamp)
+                                {
+                                        if (optAddr.balance == Optract(optAddr).queryOrderSize()) {
+                                                filled[count] = true;
+                                        } else {
+                                                filled[count] = false;
+                                        }
+                                        addrlist[count] = optAddr;
+                                        count += 1;
+                                }
 			}
 		} else { // list only those initialized by owner
 			for (uint i = start; i <= start + length - 1; i++) {
 				address optAddr = optractRecordsByIndex[i];
 				if (optractRecordsByAddress[optAddr].initialOwner != owner) continue;
-				if (Optract(optAddr).queryOnStock() == true
-				    || optractRecordsByAddress[optAddr].expiredTime - 8 hours > block.timestamp) continue;
+				if (Optract(optAddr).queryOnStock() == false
+				    || optractRecordsByAddress[optAddr].expiredTime - 8 hours <= block.timestamp)
+                                {
+                                        if (optAddr.balance == Optract(optAddr).queryOrderSize()) {
+                                                filled[count] = true;
+                                        } else {
+                                                filled[count] = false;
+                                        }
+                                        addrlist[count] = optAddr;
+                                        count += 1;
+                                }
 	
-				if (optAddr.balance == Optract(optAddr).queryOrderSize()) {
-					filled[count] = true;
-				} else {
-					filled[count] = false;
-				}
-				addrlist[count] = optAddr;
-				count += 1;
 			}
 		}
 		return (addrlist, filled);
@@ -320,14 +359,12 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 			length = totalOpts - start + 1;
 		}
 
-		address[] memory addrlist = new address[](length - _getNumOfActiveOptracts(start, length, owner));
-		uint[] memory expTimeList= new uint[](length - _getNumOfActiveOptracts(start, length, owner));
-		uint[] memory priceList = new uint[](length - _getNumOfActiveOptracts(start, length, owner));
-		uint[] memory ETHList = new uint[](length - _getNumOfActiveOptracts(start, length, owner));
-		uint[] memory opriceList = new uint[](length - _getNumOfActiveOptracts(start, length, owner));
-		bool[] memory filled = new bool[](length -_getNumOfActiveOptracts(start, length, owner));  // stack too deep if include this one
-
-	        // if (length - _getNumOfActiveOptracts(start, length, owner) == 0) return (addrlist, expTimeList, priceList, ETHList, opriceList, filled);
+		address[] memory addrlist = new address[](_getNumOfInActiveOptracts(start, length, owner));
+		uint[] memory expTimeList= new uint[](_getNumOfInActiveOptracts(start, length, owner));
+		uint[] memory priceList = new uint[](_getNumOfInActiveOptracts(start, length, owner));
+		uint[] memory ETHList = new uint[](_getNumOfInActiveOptracts(start, length, owner));
+		uint[] memory opriceList = new uint[](_getNumOfInActiveOptracts(start, length, owner));
+		bool[] memory filled = new bool[](_getNumOfInActiveOptracts(start, length, owner));
 
                 // assume all the following function calls return same order
 		expTimeList = inactiveOptractsLoop(start, length, owner, 1);

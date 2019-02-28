@@ -47,21 +47,6 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "debug2",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function",
-    "signature": "0x5ba88c28"
-  },
-  {
-    "constant": true,
-    "inputs": [],
     "name": "paused",
     "outputs": [
       {
@@ -77,36 +62,6 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "debug3",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function",
-    "signature": "0x610da891"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "debug1",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function",
-    "signature": "0x7dc7c5a5"
-  },
-  {
-    "constant": true,
-    "inputs": [],
     "name": "currencyTokenAddr",
     "outputs": [
       {
@@ -118,21 +73,6 @@
     "stateMutability": "view",
     "type": "function",
     "signature": "0x91d622b9"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "debug4",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function",
-    "signature": "0xb70902bc"
   },
   {
     "constant": true,
@@ -165,33 +105,6 @@
     "stateMutability": "nonpayable",
     "type": "constructor",
     "signature": "constructor"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "_debug1",
-        "type": "bool"
-      },
-      {
-        "name": "_debug2",
-        "type": "bool"
-      },
-      {
-        "name": "_debug3",
-        "type": "bool"
-      },
-      {
-        "name": "_debug4",
-        "type": "bool"
-      }
-    ],
-    "name": "setDebugParams",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function",
-    "signature": "0x37435e6c"
   },
   {
     "constant": false,
@@ -308,14 +221,14 @@
       {
         "name": "owner",
         "type": "address"
+      },
+      {
+        "name": "_idx",
+        "type": "uint8"
       }
     ],
-    "name": "activeOptractsExpiretime",
+    "name": "activeOptractsLoop",
     "outputs": [
-      {
-        "name": "",
-        "type": "address[]"
-      },
       {
         "name": "",
         "type": "uint256[]"
@@ -324,47 +237,7 @@
     "payable": false,
     "stateMutability": "view",
     "type": "function",
-    "signature": "0xef49a43f"
-  },
-  {
-    "constant": true,
-    "inputs": [
-      {
-        "name": "start",
-        "type": "uint256"
-      },
-      {
-        "name": "length",
-        "type": "uint256"
-      },
-      {
-        "name": "owner",
-        "type": "address"
-      }
-    ],
-    "name": "activeOptractsPrices",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address[]"
-      },
-      {
-        "name": "",
-        "type": "uint256[]"
-      },
-      {
-        "name": "",
-        "type": "uint256[]"
-      },
-      {
-        "name": "",
-        "type": "uint256[]"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function",
-    "signature": "0x1d934419"
+    "signature": "0x3b47ea04"
   },
   {
     "constant": true,
@@ -435,11 +308,155 @@
       {
         "name": "",
         "type": "uint256[]"
+      },
+      {
+        "name": "",
+        "type": "bool[]"
       }
     ],
     "payable": false,
     "stateMutability": "view",
     "type": "function",
     "signature": "0x6769f438"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "name": "length",
+        "type": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "_getNumOfInActiveOptracts",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x69edcbdc"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "name": "length",
+        "type": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "name": "_idx",
+        "type": "uint8"
+      }
+    ],
+    "name": "inactiveOptractsLoop",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xdac717e2"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "name": "length",
+        "type": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "inactiveOptractsFilledStatus",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]"
+      },
+      {
+        "name": "",
+        "type": "bool[]"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xb7233fa5"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "name": "length",
+        "type": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "inactiveOptracts",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]"
+      },
+      {
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "name": "",
+        "type": "bool[]"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x26b057ad"
   }
 ]

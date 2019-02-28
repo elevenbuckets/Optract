@@ -152,10 +152,11 @@ contract Optract {
     function currentOwnerExercise() public ownerOnly whenCanExercise {
         // require(block.timestamp > actionTime + 2 hours, "cannot operate too soon");
         require(block.timestamp > actionTime + 10 minutes, "cannot operate too soon");  // for test purpose
+        require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= totalPriceInDai);
         onStock == false;
         exercised = true;
-        ERC20(currencyTokenAddr).transfer(ethSeller, totalPriceInDai);
-        msg.sender.transfer(address(this).balance);
+        ERC20(currencyTokenAddr).transferFrom(msg.sender, ethSeller, totalPriceInDai);
+        // msg.sender.transfer(address(this).balance);
         selfdestruct(msg.sender);
     }
 
@@ -164,7 +165,7 @@ contract Optract {
         require(msg.sender == ethSeller, "only ethSeller can call it");
         require(exercised == false, "already exercised");
         onStock = false;
-        msg.sender.transfer(address(this).balance);
+        // msg.sender.transfer(address(this).balance);
         selfdestruct(msg.sender);
     }
 

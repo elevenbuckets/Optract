@@ -118,7 +118,8 @@ contract Optract {
     ) public ethFilled isOnStock whenBeforeLastExerciseChance returns(bool) {
         // verify:  require(calculateLeaf(msg.sender, some_more_data...) == targetLeaf))
         // require(iBlockRegistry(blkAddr).merkleTreeValidator(proof, isLeft, targetLeaf, merkleRoot) == true, "invalid Merkle Proof");
-        require(block.timestamp > actionTime + 2 hours, "cannot change ownership too soon");
+        // require(block.timestamp > actionTime + 2 hours, "cannot change ownership too soon");
+        require(block.timestamp > actionTime + 10 minutes, "cannot operate too soon");  // for test purpose
 	require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= optionPrice + optionPrice/500);
         address prevOwner = currentOwner;
 
@@ -149,10 +150,11 @@ contract Optract {
     // two ways to end this contract:
     //   (whenNotExpired) the last owner pay DAI and withdraw ETH or (whenExpired) ethSeller take ETH back
     function currentOwnerExercise() public ownerOnly whenCanExercise {
-        require(block.timestamp > actionTime + 2 hours, "");  // cannot withdraw right away
+        // require(block.timestamp > actionTime + 2 hours, "cannot operate too soon");
+        require(block.timestamp > actionTime + 10 minutes, "cannot operate too soon");  // for test purpose
         onStock == false;
         exercised = true;
-        ERC20(currencyTokenAddr).transferFrom(msg.sender, ethSeller, totalPriceInDai);
+        ERC20(currencyTokenAddr).transfer(ethSeller, totalPriceInDai);
         msg.sender.transfer(address(this).balance);
         selfdestruct(msg.sender);
     }

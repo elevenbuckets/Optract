@@ -64,7 +64,7 @@ class Optract extends BladeIronClient {
                                         if (rc1[0].length === rc2[0].length && rc1[0].every(function(value, index) { return value === rc2[0][index]})) {
                                                 rc1.push(rc2[1]);  // rc2[1] is the "filled" status
                                         } else {
-                                                console.log("error in query filled status, skip that part")
+                                                console.log("DEBUG: error in query filled status, skip that part")
                                         }
                                         return rc1;
                                 })

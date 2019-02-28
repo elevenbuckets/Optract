@@ -282,7 +282,35 @@
         "type": "address"
       }
     ],
-    "name": "activeOptracts",
+    "name": "_getNumOfActiveOptracts",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x61605f09"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "name": "length",
+        "type": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "activeOptractsExpiretime",
     "outputs": [
       {
         "name": "",
@@ -291,6 +319,34 @@
       {
         "name": "",
         "type": "uint256[]"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xef49a43f"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "name": "length",
+        "type": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "activeOptractsPrices",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]"
       },
       {
         "name": "",
@@ -308,7 +364,7 @@
     "payable": false,
     "stateMutability": "view",
     "type": "function",
-    "signature": "0x6769f438"
+    "signature": "0x1d934419"
   },
   {
     "constant": true,
@@ -341,5 +397,49 @@
     "stateMutability": "view",
     "type": "function",
     "signature": "0x4b140961"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "start",
+        "type": "uint256"
+      },
+      {
+        "name": "length",
+        "type": "uint256"
+      },
+      {
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "activeOptracts",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]"
+      },
+      {
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "name": "",
+        "type": "uint256[]"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x6769f438"
   }
 ]

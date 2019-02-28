@@ -39,9 +39,7 @@ class Optract extends BladeIronClient {
 				).then((QID) => {
 					console.log(`DEBUG: gasAmount after processJobs: ${this.gasAmount}`);
 					return this.getReceipts(QID).then((QIDlist) => {
-                            		        if (QIDlist[0].status !== '0x1') throw "failed to approve";
-                                              	if (QIDlist[1].status !== '0x1') throw "failed to create optract";
-                            		        return {'QIDlist': QIDlist, 'txHash': QIDlist[1].transactionHash};
+                            		        return {[QID]: QIDlist};
                                       	});
                               	});
 			});

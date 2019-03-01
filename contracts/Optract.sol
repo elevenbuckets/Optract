@@ -155,9 +155,10 @@ contract Optract {
         require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= totalPriceInDai);
         onStock == false;
         exercised = true;
+
+        iOptractRegistry(registryAddr).destructRecord();  // update record in "registry"
         ERC20(currencyTokenAddr).transferFrom(msg.sender, ethSeller, totalPriceInDai);
-        // msg.sender.transfer(address(this).balance);
-        selfdestruct(msg.sender);
+        selfdestruct(msg.sender);  // the residual send to msg.sender
     }
 
     function ethSellerWithdraw() public whenExpired {
@@ -165,8 +166,9 @@ contract Optract {
         require(msg.sender == ethSeller, "only ethSeller can call it");
         require(exercised == false, "already exercised");
         onStock = false;
-        // msg.sender.transfer(address(this).balance);
-        selfdestruct(msg.sender);
+
+        iOptractRegistry(registryAddr).destructRecord();  // update record in "registry"
+        selfdestruct(msg.sender);  // the residual send to msg.sender
     }
 
     // query functions

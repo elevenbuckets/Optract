@@ -13,6 +13,7 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 	bool public paused = false;
 
 	struct optractRecord {
+	        uint id;
 		uint expiredTime; // timestamp
 		address initialOwner; 
 	}
@@ -46,17 +47,30 @@ contract OptractRegistry { // PoC ETH-DAI Optract
                 require(ETHAmount >= 3 wei);
 
 		optractRecord memory optRcd;
+                totalOpts = totalOpts + 1;
                 Optract opt = new Optract(ETHAmount, totalPrice, address(this), msg.sender, blkAddr, currencyTokenAddr);
 
                 require(ERC20(currencyTokenAddr).transferFrom(msg.sender, address(opt), initialPayment));
 
+                optRcd.id = totalOpts;
                 optRcd.expiredTime = block.timestamp + period * 1 days;
                 optRcd.initialOwner = msg.sender;
 
-                totalOpts = totalOpts + 1;
                 optractRecordsByIndex[totalOpts] = address(opt); // mapping start from uint key = 1
                 optractRecordsByAddress[address(opt)] = optRcd;
 	}
+
+	function destructRecord() external {
+                uint i = optractRecordsByAddress[msg.sender].id;
+                delete optractRecordsByIndex[i];
+                if (i != totalOpts){
+                        optractRecordsByAddress[optractRecordsByIndex[totalOpts]].id = i;
+                        optractRecordsByIndex[i] = optractRecordsByIndex[totalOpts];
+                        delete optractRecordsByIndex[totalOpts];
+                }
+                delete optractRecordsByAddress[msg.sender];
+                totalOpts -= 1;
+        }
 
 	// Constant functions
 	function queryInitPrice() public view returns (uint) { 

@@ -130,6 +130,16 @@
     "signature": "0x6e9a01a2"
   },
   {
+    "constant": false,
+    "inputs": [],
+    "name": "destructRecord",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x99691650"
+  },
+  {
     "constant": true,
     "inputs": [],
     "name": "queryInitPrice",

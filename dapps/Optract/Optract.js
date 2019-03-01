@@ -48,6 +48,25 @@ class Optract extends BladeIronClient {
                                 return rc1;
                         })
                 }
+
+                this.exercise = (ctrName) =>  // assume already app.Optract.connectABI()
+                {
+                        if (! ctrName in this.ctrAddrBook ) throw "contract not found";
+                        this.call(ctrName)(actionTime)().then((time) =>{
+                                if (time - Math.floor(Date.now()/1000) < 600) {throw "too soon";}
+                                return this.call(ctrName)('totalPriceInDai')().then((tokenAmount) => 
+                                {
+                                        return this.manualGasBatch(2000000)(
+                                                this.Tk('DAI')('approve')(this.ctrAddrBook[ctrName], tokenAmount)(),
+                                                this.Tk(ctrName)(currentOwnerExercise)()()
+                                        ).then((QID) => 
+                                        {
+                                                return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
+                                        });
+                                });
+                        }) 
+                        
+                }
         }
 }
 

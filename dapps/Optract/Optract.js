@@ -32,27 +32,39 @@ class Optract extends BladeIronClient {
 
                 this.activeOptracts = (start, length, ownerAddr = '0x0') => 
 		{
-			let p = [
-					this.call(this.ctrName)('activeOptracts')(start, length, ownerAddr),
-					this.call(this.ctrName)('activeOptractsFilledStatus')(start, length, ownerAddr)
-				];
-
-                        return Promise.all(p).then((rc) => {
-				let rc1 = rc[0]; let rc2 = rc[1];
-                                // compare rc1[0] and rc2[0], i.e., the address of contracts
-                                if (rc1[0].length === rc2[0].length && rc1[0].every(function(value, index) { return value === rc2[0][index]})) {
-                                        rc1.push(rc2[1]);  // rc2[1] is the "filled" status
-                                } else {
-                                        console.log("DEBUG: error in query filled status, skip that part")
-                                }
-                                return rc1;
+                        console.log("LOG: return arrays:");
+                        console.log("     addr, expiretime (unix time in sec), total price of ETH (DAI), ETH amount, option price (DAI), filled(bool)");
+                        return this.call(this.ctrName)('activeOptracts')(start, length, ownerAddr).then((rc) => {
+                                return rc;
                         })
                 }
 
-                this.exercise = (ctrName) =>  // assume already app.Optract.connectABI()
+                this.inactiveOptracts = (start, length, ownerAddr = '0x0') =>
+		{
+                        console.log("LOG: return arrays:");
+                        console.log("     addr, expiretime (unix time in sec), total price of ETH (DAI), ETH amount, option price (DAI), filled(bool)");
+                        return this.call(this.ctrName)('inactiveOptracts')(start, length, ownerAddr).then((rc) => {
+                                return rc;
+                        })
+                }
+
+                /*
+                   below are optract related functions, assume already bind an optract by "app.Optract.connectABI()"
+                */
+                this.fillInEth = (ctrName) =>
                 {
                         if (! ctrName in this.ctrAddrBook ) throw "contract not found";
-                        this.call(ctrName)(actionTime)().then((time) =>{
+                        return this.call(ctrName)('ethAmount')().then((ethAmount) => {
+                                return this.sendTk(ctrName)('fillInEth')()(ethAmount).then((qid) => {
+                                        return qid;
+                                })
+                        })
+                }
+
+                this.exercise = (ctrName) =>
+                {
+                        if (! ctrName in this.ctrAddrBook ) throw "contract not found";
+                        return this.call(ctrName)('actionTime')().then((time) =>{
                                 if (time - Math.floor(Date.now()/1000) < 600) {throw "too soon";}
                                 return this.call(ctrName)('totalPriceInDai')().then((tokenAmount) => 
                                 {
@@ -65,7 +77,22 @@ class Optract extends BladeIronClient {
                                         });
                                 });
                         }) 
-                        
+                }
+
+                this.claimOptract = (ctrName) =>
+                {
+                        if (! ctrName in this.ctrAddrBook ) throw "contract not found";
+                        // todo: obtain proof, isLeft, targetLeat, merkleRoot
+                        let [proof, isLeft, targetLeat, merkleRoot] = [[], [], '0x0', '0x0'];
+                        return this.call(ctrName)('optionPrice')().then((tokenAmount) => {
+                                return this.manualGasBatch(2000000)(
+                                        this.Tk('DAI')('approve')(this.ctrAddrBook[ctrName], tokenAmount + tokenAmount/500)(),
+                                        this.Tk(ctrName)('claimOptract')(proof, isLeft, targetLeat, merkleRoot)()
+                                ).then((QID) =>
+                                {
+                                        return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
+                                });
+                        })
                 }
         }
 }

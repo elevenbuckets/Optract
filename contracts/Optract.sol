@@ -2,7 +2,7 @@ pragma solidity ^0.5.2;
 import "./SafeMath.sol";
 import "./RegistryInterface.sol";
 import "./ERC20.sol";
-// import "./BlockRegistryInterface.sol";
+import "./BlockRegistryInterface.sol";
 
 /*
 roles:
@@ -27,10 +27,16 @@ contract Optract {
     uint256 public totalPriceInDai;
     uint256 public optionPrice;
     uint256 public actionTime;  // right now, the actions are contract creation and newOwner()
+    uint256 public sblockTimeStep;
     uint256 public period;  // length of time
     bool public onStock;
     bool public expired = false;  // query "registry" to determine when to expire
     bool public exercised = false;
+
+    // decide who and when can claimOptract(); update when claimOptract(), reset when putOnStock()
+    address public lastOwner;
+    uint256 public lastSblockNo = 0;  // `SblockNo` stand for sideblock number
+    uint256 public lastOprice = 0;  // `Oprice` stand for option price
 
     constructor (
         uint256 _ethAmount,
@@ -50,6 +56,8 @@ contract Optract {
         onStock = true;  // for others to query
         currentOwner = _originalOwner;
         actionTime = block.timestamp;  // use this to avoid some too soon operations
+        // sblockTimeStep = iOptractRegistry(blkAddr).getSblockTimeStep();
+        sblockTimeStep = 15 minutes;
     }
 
     modifier ownerOnly() {
@@ -109,49 +117,81 @@ contract Optract {
         // note: the originalOwner can hold for some time then withdraw or putOnStock() at some point
     }
 
+    // consider: gap of 'actionTime' should > 15 min = sidechain block time = 'sblockTimeStep'
+    // consider: setNewOptionPrice() only accept a lower optionPrice
+    // consider: claimOptract can call by: 1: option Buyers (once sideblock finished, there one real winner), 2: option seller, 3: 11BE
+    // cnosider: add a mapping or variable to record claimed price of a sideblockNo (sbNo)
+    //           if same sbNo, the price must larger; otherwise, current sbNo must > previous sbNo with a claimed price
+
     // a successful buyer can get the ownership (verified through state channel)
     function claimOptract(
         bytes32[] memory proof,
         bool[] memory isLeft,
         bytes32 targetLeaf,
-        bytes32 merkleRoot
-    ) public ethFilled isOnStock whenBeforeLastExerciseChance returns(bool) {
+        bytes32 merkleRoot,
+        uint256 bidPrice
+    ) public ethFilled whenBeforeLastExerciseChance returns(bool) {
         // verify:  require(calculateLeaf(msg.sender, some_more_data...) == targetLeaf))
         // require(iBlockRegistry(blkAddr).merkleTreeValidator(proof, isLeft, targetLeaf, merkleRoot) == true, "invalid Merkle Proof");
-        // require(block.timestamp > actionTime + 2 hours, "cannot change ownership too soon");
-        require(block.timestamp > actionTime + 10 minutes, "cannot operate too soon");  // for test purpose
-	require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= optionPrice + optionPrice/500);
-        address prevOwner = currentOwner;
+	require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= bidPrice + bidPrice/500);
+	require(bidPrice > optionPrice);
+        uint256 sblockNo = iBlockRegistry(blkAddr).getSblockNo();
 
-        // new owner
-        onStock = false;  // has to call putOnStock() to make it on stock
-        currentOwner = msg.sender;
-        actionTime = block.timestamp;
+        // new owner; note the ownership could transfer several times in one sblockNo
+        if (onStock == true && lastSblockNo == 0 && lastOprice == 0) {  // for first one who claim during current sblockNo
+            onStock = false;
+            lastOwner = currentOwner;  // the owner before this sblockNo
+            lastSblockNo = sblockNo;
 
-        // the new owner transfer DAI to contract owner
-        ERC20(currencyTokenAddr).transferFrom(msg.sender, prevOwner, optionPrice);
-        // ERC20(currencyTokenAddr).transferFrom(msg.sender, iBlockRegistry(blkAddr), optionPrice/500);  // 0.2% fee to block contract
+            lastOprice = bidPrice;
+            currentOwner = msg.sender;
+            actionTime = block.timestamp;
 
+            ERC20(currencyTokenAddr).transferFrom(msg.sender, lastOwner, bidPrice);
+            // ERC20(currencyTokenAddr).transferFrom(msg.sender, iBlockRegistry(blkAddr), bidPrice/500);  // 0.2% fee to block contract
+        } else if (onStock == false && bidPrice > lastOprice && sblockNo == lastSblockNo) {  // happen when second buyer coming in same sblock
+            // in same sblock, highest bid win the contract, and the prevBidder get money back
+            address prevBidder = currentOwner;
+            uint256 prevBidPrice = lastOprice;
+
+            lastOprice = bidPrice;
+            currentOwner = msg.sender;
+            actionTime = block.timestamp;
+
+            ERC20(currencyTokenAddr).transferFrom(msg.sender, prevBidder, prevBidPrice);
+            ERC20(currencyTokenAddr).transferFrom(msg.sender, lastOwner, bidPrice - prevBidPrice);
+            // ERC20(currencyTokenAddr).transferFrom(msg.sender, iBlockRegistry(blkAddr), bidPrice/500);  // 0.2% fee to block contract
+        } else {
+            revert();
+        }
+        // optionPrice = optionPrice*mul(1.05);  // set new default price
         return true;
     }
 
     function putOnStock(uint256 _newOptionPrice) public ethFilled ownerOnly whenBeforeLastExerciseChance {
         // call it when a buyer want to sell the option
         require(onStock == false, "can only put on Stock once");
+        require(block.timestamp > actionTime + 10 minutes, "cannot operate too soon");  // use small value for debug
         onStock = true;
         optionPrice = _newOptionPrice;
+        
+        // reset
+        lastOwner = currentOwner;
+        lastSblockNo = 0;
+        lastOprice = 0;
     }
 
-    // function setNewOptionPrice(uint newPrice) public ownerOnly {
-    //     // any restrictions?
-    //     optionPrice = newPrice;
-    // }
+    function setNewOptionPrice(uint newPrice) public ownerOnly {
+        require(newPrice < optionPrice);
+        require(block.timestamp > actionTime + 10 minutes, "cannot operate too soon");  // use small value for debug
+        optionPrice = newPrice;
+    }
 
     // two ways to end this contract:
     //   (whenNotExpired) the last owner pay DAI and withdraw ETH or (whenExpired) ethSeller take ETH back
     function currentOwnerExercise() public ownerOnly whenCanExercise {
         // require(block.timestamp > actionTime + 2 hours, "cannot operate too soon");
-        require(block.timestamp > actionTime + 10 minutes, "cannot operate too soon");  // for test purpose
+        require(block.timestamp > actionTime + sblockTimeStep, "cannot operate too soon");  // for test purpose
         require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= totalPriceInDai);
         onStock == false;
         exercised = true;
@@ -189,7 +229,7 @@ contract Optract {
     }
 
     function isFilled() public view returns (bool) {
-        return (ethSeller != address(0) && address(this).balance > 0);
+        return (ethSeller != address(0) && address(this).balance == ethAmount);
     }
 
 }

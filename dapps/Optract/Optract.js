@@ -343,7 +343,7 @@ class Optract extends BladeIronClient {
 		// checking bid conditions
 		this.validPurchase = (optract, buyer, bidPrice) => {
 			let p = [
-				//this.myMemberStatus(buyer).then((rc) => { return rc[0] !== 'active'; }),
+				this.memberStatus(buyer).then((rc) => { return rc[0] !== 'active'; }),
 				this.call(this.ctrName)('queryOptractRecords')(optract).then((rc) => { 
 					let t = rc[0]; 
 					return this.activeOptracts(t,t).then((a) => { 

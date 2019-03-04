@@ -218,7 +218,7 @@ contract MemberShip {
         if (msg.sender == coreManager[0] || msg.sender == coreManager[1] || msg.sender == coreManager[2]) {
             return true;
         } else {
-            return false
+            return false;
         }
     }
 

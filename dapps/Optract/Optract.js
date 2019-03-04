@@ -176,14 +176,27 @@ class Optract extends BladeIronClient {
 						v,r,s
 					};
 
-					let RLP = this.handleRLPx(fields)(params); // encode
+					let rlp = this.handleRLPx(fields)(params); // encode
 					
-					this.result[this.initHeight].push({...params, sent: false, RLP});
+					this.result[this.initHeight].push({...params, sent: false, rlp});
 					
 					// IPFS_PUBSUB still needs to be added
+					this.sendClaims(this.initHeight, this.channelName);
 				})
 			})
 		}
+
+		this.sendClaims = (initHeight, channel) =>
+                {
+                        this.results[initHeight].map((robj, idx) => {
+                                if (!robj.sent) {
+                                        return this.ipfs_pubsub_publish(channel, robj.rlp.serialize()).then((rc) => {
+                                                console.log(`- Signed message broadcasted: Optract: ${robj.optractAddress}, Payload: ${robj.payload}`);
+                                        })
+                                        .catch((err) => { console.log(`Error in sendClaims`); console.trace(err); return false});
+                                }
+                        })
+                }
 
 		// for current round by validator only
                 this.generateBlock = (blkObj) =>
@@ -232,7 +245,7 @@ class Optract extends BladeIronClient {
 					rlplist[idx] = null;
 					pldlist[idx-1] = ro[5];
 					pldlist[idx] = null;
-				} else if (pldlist.indexOf(ro[5]) !== pldlist.lastIndexOf(rc[5]) {
+				} else if (pldlist.indexOf(ro[5]) !== pldlist.lastIndexOf(rc[5])) {
                                         rlplist[idx] = null;
 					pldlist[idx] = null;
                                 }
@@ -330,7 +343,7 @@ class Optract extends BladeIronClient {
 		// checking bid conditions
 		this.validPurchase = (optract, buyer, bidPrice) => {
 			let p = [
-				this.myMemberStatus(buyer).then((rc) => { return rc[0] !== 'active'; }),
+				//this.myMemberStatus(buyer).then((rc) => { return rc[0] !== 'active'; }),
 				this.call(this.ctrName)('queryOptractRecords')(optract).then((rc) => { 
 					let t = rc[0]; 
 					return this.activeOptracts(t,t).then((a) => { 

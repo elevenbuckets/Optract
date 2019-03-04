@@ -35,6 +35,7 @@ const fields =
    {name: 'nonce', length: 32, allowLess: true, default: new Buffer([]) },
    {name: 'optractAddress', length: 20, allowZero: false, default: new Buffer([]) },
    {name: 'originAddress', length: 20, allowZero: true, default: new Buffer([]) },
+   {name: 'submitBlock', length: 32, allowLess: true, default: new Buffer([]) },
    {name: 'bidPrice', length: 32, allowLess: true, default: new Buffer([]) },
    {name: 'payload', length: 32, allowLess: true, default: new Buffer([]) },
    {name: 'v', allowZero: true, default: new Buffer([0x1c]) },
@@ -141,15 +142,134 @@ class Optract extends BladeIronClient {
                         })
                 }
 
+		this.submitNewBid = (ctrAddr, bidPrice, overWriteNonce = null) =>
+		{
+			let _nonce = overWriteNonce === null ? this.results[this.initHeight].length + 1 : overWriteNonce;
+			let data = abi.encodeParameters(
+				[ 'uint', 'address', 'address', 'uint' ],
+				[ _nonce, ctrAddr, this.userWallet, bidPrice ]
+			);
+
+			let p = [
+				this.client.call('ethNetStatus'),
+				this.validPurchase(ctrAddr, this.userWallet, bidPrice)
+			];
+
+			return Promise.all(p).then((rc) => 
+			{
+				if (!rc[1]) return false;
+				let _payload = ethUtils.hashPersonalMessage(Buffer.from(data));
+				this.client.call('unlockAndSign', [this.userWallet, Buffer.from(data)]).then((sig) =>
+                                {
+					let v = Number(sig.v);
+                                        let r = Buffer.from(sig.r);
+                                        let s = Buffer.from(sig.s);
+
+					let params = 
+					{
+						nonce: _nonce,
+						optractAddress: ctrAddr,
+						originAddress: this.userWallet,
+						submitBlock: rc[0].blockHeight,
+						bidPrice,
+						payload: _payload,
+						v,r,s
+					};
+
+					let RLP = this.handleRLPx(fields)(params); // encode
+					
+					this.result[this.initHeight].push({...params, sent: false, RLP});
+					
+					// IPFS_PUBSUB still needs to be added
+				})
+			})
+		}
+
+		// for current round by validator only
+                this.generateBlock = (blkObj) =>
+                {
+                        const __genBlockBlob = (blkObj) => (resolve, reject) =>
+                        {
+                                fs.writeFile(path.join(this.configs.database, String(blkObj.initHeight), 'blockBlob'), JSON.stringify(blkObj), (err) => {
+                                        if (err) return reject(err);
+                                        resolve(path.join(this.configs.database, String(blkObj.initHeight), 'blockBlob'));
+                                })
+                        }
+
+                        let stage = new Promise(__genBlockBlob(blkObj));
+                        stage = stage.then((blockBlobPath) =>
+                        {
+                                console.log(`Local block data cache: ${blockBlobPath}`);
+                                return this.ipfsPut(blockBlobPath);
+                        })
+                        .catch((err) => { console.log(`ERROR in generateBlock`); console.trace(err); });
+
+                        return stage;
+                }
+
+		this.uniqRLP = (address) => 
+		{
+			const compare = (a,b) => { if (ethUtils.bufferToInt(a.nonce) > ethUtils.bufferToInt(b.nonce)) { return 1 } else { return -1 }; return 0 };
+
+			let pldlist = []; let nclist = [];
+                        let rlplist = this.bidRecords[this.initHeight][address].sort(compare).slice(0, 100);
+
+                        let rlpObjs = rlplist.map((r) => {
+                                nclist.push(r.toJSON()[0]); // nonce
+                                pldlist.push(r.toJSON()[5]); // payload
+                                return r.toJSON();
+                        });
+
+			console.log(`>>>>>>>>`);
+                        console.log(`DEBUG: rlpObjs`); console.dir(rlpObjs);
+                        console.log(`DEBUG: nclist`); console.dir(nclist);
+                        console.log(`DEBUG: pldlist`); console.dir(pldlist);
+			console.log(`<<<<<<<<`);
+
+                        rlpObjs.map((ro, idx) => {
+                                if (ro[0] === nclist[idx-1]) {
+					rlplist[idx-1] = rlplist[idx];
+					rlplist[idx] = null;
+					pldlist[idx-1] = ro[5];
+					pldlist[idx] = null;
+				} else if (pldlist.indexOf(ro[5]) !== pldlist.lastIndexOf(rc[5]) {
+                                        rlplist[idx] = null;
+					pldlist[idx] = null;
+                                }
+                        })
+
+                        return {data: rlplist.filter((x) => { return x !== null }), leaves: pldlist.filter((x) => { return x !== null })};
+		}
+
 		this.makeMerkleTreeAndUploadRoot = () =>
 		{
 			// Currently, we will group all block data into single JSON and publish it on IPFS
                         let blkObj =  {initHeight: this.initHeight, data: {} };
                         let leaves = [];
 
+			// is this block data structure good enough?
 			Object.keys(this.bidRecords[blkObj.initHeight]).map((addr) => {
 				if (this.winRecords[blkObj.initHeight][addr].length === 0) return;
-			})
+				
+				let out = this.uniqRLP(addr);
+				blkObj.data[addr] = out.data;
+				leaves = [ ...leaves, ...out.leaves ];
+			});
+
+                        console.log(`DEBUG: Final Leaves for initHeight = ${blkObj.initHeight}:`); console.dir(leaves);
+
+			let merkleTree = this.makeMerkleTree(leaves);
+                        let merkleRoot = ethUtils.bufferToHex(merkleTree.getMerkleRoot());
+                        console.log(`Block Merkle Root: ${merkleRoot}`);
+
+                        let stage = this.generateBlock(blkObj);
+                        stage = stage.then((rc) => {
+                                console.log('IPFS Put Results'); console.dir(rc);
+                                return this.sendTk(this.ctrName)('submitMerkleRoot')(blkObj.initHeight, merkleRoot, rc[0].hash)();
+                        })
+                        .catch((err) => { console.log(`ERROR in makeMerkleTreeAndUploadRoot`); console.trace(err); });
+
+                        return stage;
 		}
 
 		// Validator IPFS PubSub event handler
@@ -169,9 +289,9 @@ class Optract extends BladeIronClient {
 				} else if ( typeof(this.bidRecords[this.initHeight][address]) === 'undefined' ) {
                                      	this.bidRecords[this.initHeight][address] = [];
 				  	return;
-                                } else if ( this.bidRecords[this.initHeight][address].findIndex((x) => { return Buffer.compare(x.nonce, data.nonce) == 0 } ) !== -1) {
-                                        console.log(`Duplicate nonce (${address}): received nonce ${ethUtils.bufferToInt(data.nonce)} more than once`);
-                                        return;
+                               // } else if ( this.bidRecords[this.initHeight][address].findIndex((x) => { return Buffer.compare(x.nonce, data.nonce) == 0 } ) !== -1) {
+                               //         console.log(`Duplicate nonce (${address}): received nonce ${ethUtils.bufferToInt(data.nonce)} more than once`);
+                               //         return;
                                 } else if ( this.bidRecords[this.initHeight][address].findIndex((x) => { return Buffer.compare(x.payload, data.payload) == 0 } ) !== -1) {
                                         console.log(`Duplicate payload (${address}): ${ethUtils.bufferToHex(data.payload)}`)
                                         return;
@@ -197,13 +317,12 @@ class Optract extends BladeIronClient {
 
 				if (this.verifySignature(sigout)) {
                                         // store tx in mem pool for IPFS publish
-                                        console.log(`---> Received winning claim from ${address}, Ticket: ${ethUtils.bufferToHex(data.ticket)}`);
+                                        console.log(`---> Received bid from ${address}, target Optract: ${optract}}`);
                                         this.bidRecords[this.initHeight][address].push(data);
-					// still need to determine what ACK message to send
-                                        /*this.ipfs_pubsub_publish(
+                                        this.ipfs_pubsub_publish(
                                                 this.channelACK,
-                                                Buffer.from(ethUtils.bufferToInt(data.submitBlock) + '_' + address + '_' + ethUtils.bufferToHex(data.ticket))
-                                        );*/ 
+                                                Buffer.from(ethUtils.bufferToInt(data.submitBlock) + '_' + address + '_' + ethUtils.bufferToHex(data.payload))
+                                        ); 
                                 }
 			})
 		}
@@ -212,8 +331,9 @@ class Optract extends BladeIronClient {
 		this.validPurchase = (optract, buyer, bidPrice) => {
 			let p = [
 				this.myMemberStatus(buyer).then((rc) => { return rc[0] !== 'active'; }),
-				this.call(this.ctrName)('totalOpts')().then((t) => { 
-					return this.activeOptracts(1,t).then((a) => { 
+				this.call(this.ctrName)('queryOptractRecords')(optract).then((rc) => { 
+					let t = rc[0]; 
+					return this.activeOptracts(t,t).then((a) => { 
 						let idx = a[0].indexOf(optract);
 						return idx !== -1 && a[5][idx] === true && bidPrice >= a[4][idx];
 					}) 

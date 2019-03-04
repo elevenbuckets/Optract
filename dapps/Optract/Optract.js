@@ -362,8 +362,8 @@ class Optract extends BladeIronClient {
                 this.memberStatus = (address) => {  // "status", "token (hex)", "since", "penalty"
                         return this.call('MemberShip')('getMemberInfo')(address).then( (res) => {
                                 let status = res[0];
-                                let statusDict = ["not member", "expired", "active"];
-                                return [statusDict[status], res[1], res[2], res[3]]  // "status", "toKenHex", "since", "penalty"
+                                let statusDict = ["failed connection", "active", "expired", "not member"];
+                                return [statusDict[status], res[1], res[2], res[3], res[4]]  // "status", "id", "since", "penalty", "kycid"
                         })
                 }
 

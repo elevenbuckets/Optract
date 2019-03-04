@@ -4,11 +4,15 @@ var ERC20 = artifacts.require("./ERC20.sol");
 var StandardToken = artifacts.require("./StandardToken.sol");
 var DAI = artifacts.require("./DAI.sol");
 var SafeMath = artifacts.require("./SafeMath.sol");
+var BlockRegistry = artifacts.require("./BlockRegistry.sol");
+var MemberShip = artifacts.require("MemberShip.sol");
 
 module.exports = function(deployer) {
   deployer.deploy(SafeMath);
-  deployer.link(SafeMath, StandardToken);
+  deployer.link(SafeMath, [StandardToken, BlockRegistry]);
   deployer.deploy(StandardToken);
+  deployer.deploy(BlockRegistry);
+  deployer.deploy(MemberShip);
   deployer.deploy(DAI).then((iDAI) => {
 	let DAIAddr = iDAI.address;
   	deployer.link(SafeMath, Optract);

@@ -11,7 +11,8 @@ contract BlockRegistry{
     uint constant public period_all = 20;
     uint public initHeight;
     uint public sblockNo;
-    uint constant public sblockTimeStep = 15 minutes;  // better way to define?
+    uint public prevTimeStamp;
+    uint public sblockTimeStep = 15 minutes;  // better way to define?
 
     struct blockStat{
         uint blockHeight;
@@ -33,12 +34,35 @@ contract BlockRegistry{
             0x4AD56641C569C91C64C28a904cda50AE5326Da41,
             0xaF7400787c54422Be8B44154B1273661f1259CcD,
             address(0)];
+        validators = [ 0xB440ea2780614b3c6a00e512f432785E7dfAFA3E,
+            0x4AD56641C569C91C64C28a904cda50AE5326Da41,
+            0xaF7400787c54422Be8B44154B1273661f1259CcD,
+            address(0), address(0), address(0), address(0), address(0),
+            address(0), address(0), address(0), address(0), address(0),
+            address(0), address(0), address(0)];
+        prevTimeStamp = block.timestamp - sblockTimeStep;
     }
 
     // Modifiers
     modifier managerOnly() {
         require(msg.sender == managers[0] || msg.sender == managers[1] || msg.sender == managers[2] || msg.sender == managers[3]);
         _;
+    }
+
+    modifier validatorOnly() {
+        require(msg.sender == validators[0] || msg.sender == validators[1] || msg.sender == validators[2] || 
+                msg.sender == validators[3] || msg.sender == validators[4] || msg.sender == validators[5] || 
+                msg.sender == validators[6] || msg.sender == validators[7] || msg.sender == validators[8] || 
+                msg.sender == validators[9] || msg.sender == validators[10] || msg.sender == validators[11] || 
+                msg.sender == validators[12] || msg.sender == validators[13] || msg.sender == validators[14]);
+        _;
+    }
+
+    function submitMerkleRoot(uint _initHeight, bytes32 _merkleRoot, string memory _ipfsAddr) public validatorOnly returns (bool) {
+        // require(block.number >= _initHeight + period_all && block.number <= _initHeight + period_all + 4);
+        require(block.timestamp >= prevTimeStamp + sblockTimeStep);
+        blockHistory[_initHeight] = blockStat(_initHeight, _merkleRoot, _ipfsAddr);
+        return true;
     }
 
     // query

@@ -104,6 +104,7 @@ contract Optract {
                );
         _;
     }
+
     // after construct, need a ethSeller to fill in ETH, and the ethSeller obtain DAI
     function fillInEth() public payable whenNotExpired {
         require(ethSeller == address(0), "others fill ETH already");  // only one can fill in ETH
@@ -171,7 +172,7 @@ contract Optract {
     function putOnStock(uint256 _newOptionPrice) public ethFilled ownerOnly whenBeforeLastExerciseChance {
         // call it when a buyer want to sell the option
         require(onStock == false, "can only put on Stock once");
-        require(block.timestamp > actionTime + 10 minutes, "cannot operate too soon");  // use small value for debug
+        // require(block.timestamp > actionTime + sblockTimeStep*2, "cannot operate too soon");  // comment for debug
         onStock = true;
         optionPrice = _newOptionPrice;
         
@@ -183,15 +184,16 @@ contract Optract {
 
     function setNewOptionPrice(uint newPrice) public ownerOnly {
         require(newPrice < optionPrice);
-        require(block.timestamp > actionTime + 10 minutes, "cannot operate too soon");  // use small value for debug
+        require(block.timestamp > actionTime + sblockTimeStep, "cannot operate too soon");  // use small value for debug
         optionPrice = newPrice;
     }
 
-    // two ways to end this contract:
-    //   (whenNotExpired) the last owner pay DAI and withdraw ETH or (whenExpired) ethSeller take ETH back
+    // three ways to end this contract:
+    //   (whenNotExpired) the last owner pay DAI and withdraw ETH or
+    //   (whenExpired) ethSeller take ETH back, or
+    //                 if no one fillInEth() then originalOwner take back ETH
     function currentOwnerExercise() public ownerOnly whenCanExercise {
-        // require(block.timestamp > actionTime + 2 hours, "cannot operate too soon");
-        require(block.timestamp > actionTime + sblockTimeStep, "cannot operate too soon");  // for test purpose
+        require(block.timestamp > actionTime + sblockTimeStep, "cannot operate too soon");
         require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= totalPriceInDai);
         onStock == false;
         exercised = true;
@@ -209,6 +211,15 @@ contract Optract {
 
         iOptractRegistry(registryAddr).destructRecord();  // update record in "registry"
         selfdestruct(msg.sender);  // the residual send to msg.sender
+    }
+
+    function cancelOptractCall() public ownerOnly whenExpired {
+        // if no one fill in this contract, one can calcel this optract after expired (or anytime?)
+        require(ethSeller == address(0));
+        require(msg.sender == originalOwner);
+        onStock == false;
+        iOptractRegistry(registryAddr).destructRecord();  // update record in "registry"
+        selfdestruct(msg.sender);  // the residual ETH send to msg.sender
     }
 
     // query functions

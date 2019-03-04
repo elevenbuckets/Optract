@@ -7,6 +7,7 @@ interface iOptractRegistry { // PoC ETH-DAI Optract
 	function queryInitPrice() external view returns (uint);
 	function isExpired(address optractAddress) external view returns (bool);
 	function getExpireTime() external view returns (uint);
+        function queryOptractRecords(address _addr) external view returns (uint, uint, address);
 	function activeOptracts(uint start, uint length, address owner) external view returns (
 		address[] memory addrlist, 
 		   uint[] memory expTimeList, 

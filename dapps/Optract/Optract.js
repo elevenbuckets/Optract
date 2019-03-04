@@ -101,8 +101,8 @@ class Optract extends BladeIronClient {
 		this.putOnStock = (ctrName, optPrice) =>
 		{
                         if (! ctrName in this.ctrAddrBook ) throw "contract not found";
-			return this.sendTk(ctrName)('queryOnStock')().then((rc) => {
-				if (!rc) { return false; }
+			return this.call(ctrName)('queryOnStock')().then((rc) => {
+				if (rc === true) { return false; }
 				return this.sendTk(ctrName)('putOnStock')(optPrice)();	
 			})
 		}

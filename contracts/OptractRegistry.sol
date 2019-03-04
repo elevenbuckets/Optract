@@ -89,9 +89,9 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 	}
 
         function queryOptractRecords(address _addr) external view returns (uint, uint, address) {
-                return (optractRecordsByAddress(_addr).id,
-                        optractRecordsByAddress(_addr).expiredTime,
-                        optractRecordsByAddress(_addr).initialOwner)
+                return (optractRecordsByAddress[_addr].id,
+                        optractRecordsByAddress[_addr].expiredTime,
+                        optractRecordsByAddress[_addr].initialOwner);
         }
 
         // Constant functions: list active and inactive optracts

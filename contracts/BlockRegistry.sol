@@ -2,7 +2,6 @@ pragma solidity ^0.5.2;
 import "./SafeMath.sol";
 
 
-
 contract BlockRegistry{
     using SafeMath for uint256;
 

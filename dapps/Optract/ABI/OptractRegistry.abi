@@ -193,6 +193,34 @@
     "constant": true,
     "inputs": [
       {
+        "name": "_addr",
+        "type": "address"
+      }
+    ],
+    "name": "queryOptractRecords",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x38440451"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
         "name": "start",
         "type": "uint256"
       },

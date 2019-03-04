@@ -17,6 +17,21 @@
   {
     "constant": true,
     "inputs": [],
+    "name": "sblockTimeStep",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x17ca3256"
+  },
+  {
+    "constant": true,
+    "inputs": [],
     "name": "blkAddr",
     "outputs": [
       {
@@ -28,6 +43,21 @@
     "stateMutability": "view",
     "type": "function",
     "signature": "0x28f402b1"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "lastOprice",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x31dc3b40"
   },
   {
     "constant": true,
@@ -92,6 +122,21 @@
   {
     "constant": true,
     "inputs": [],
+    "name": "lastOwner",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x8a56ca45"
+  },
+  {
+    "constant": true,
+    "inputs": [],
     "name": "totalPriceInDai",
     "outputs": [
       {
@@ -118,6 +163,21 @@
     "stateMutability": "view",
     "type": "function",
     "signature": "0x91d622b9"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "lastSblockNo",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xaab88596"
   },
   {
     "constant": true,
@@ -269,6 +329,10 @@
       {
         "name": "merkleRoot",
         "type": "bytes32"
+      },
+      {
+        "name": "bidPrice",
+        "type": "uint256"
       }
     ],
     "name": "claimOptract",
@@ -281,7 +345,7 @@
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function",
-    "signature": "0x5d0a4cde"
+    "signature": "0x3a0d3aab"
   },
   {
     "constant": false,
@@ -297,6 +361,21 @@
     "stateMutability": "nonpayable",
     "type": "function",
     "signature": "0xb56fb337"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "newPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "setNewOptionPrice",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xce2ca19e"
   },
   {
     "constant": false,
@@ -317,6 +396,16 @@
     "stateMutability": "nonpayable",
     "type": "function",
     "signature": "0xd80cc009"
+  },
+  {
+    "constant": false,
+    "inputs": [],
+    "name": "cancelOptractCall",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xd6e8c273"
   },
   {
     "constant": true,

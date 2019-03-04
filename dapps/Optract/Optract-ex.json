@@ -4,6 +4,7 @@
    "conditionDir": "/home/kai/Work/project/11be/dapps/Optract/Conditions",
    "contracts": [{ "ctrName": "Optract", "conditions": ["Sanity"] },
                  { "ctrName": "OptractRegistry", "conditions": ["Sanity"] },
+                 { "ctrName": "MemberShip", "conditions": ["Sanity"] },
                  { "ctrName": "DAI", "conditions": ["Sanity"] }],
    "account": "",
    "database": "/home/kai/Work/project/11be/dapps/Optract/DB",

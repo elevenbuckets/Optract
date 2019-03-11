@@ -280,7 +280,7 @@ class Optract extends BladeIronClient {
                         let stage = this.generateBlock(blkObj);
                         stage = stage.then((rc) => {
                                 console.log('IPFS Put Results'); console.dir(rc);
-                                return this.sendTk(this.ctrName)('submitMerkleRoot')(blkObj.initHeight, merkleRoot, rc[0].hash)();
+                                return this.sendTk('BlockRegistry')('submitMerkleRoot')(blkObj.initHeight, merkleRoot, rc[0].hash)();
                         })
                         .catch((err) => { console.log(`ERROR in makeMerkleTreeAndUploadRoot`); console.trace(err); });
 

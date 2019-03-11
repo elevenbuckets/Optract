@@ -387,9 +387,21 @@ class Optract extends BladeIronClient {
 			this.channelName = ethUtils.bufferToHex(ethUtils.sha256(this.ctrAddrBook[this.ctrName]));
 			this.channelACK  = [ ...this.channelName ].reverse().join('');
 			
-			return true;			
+			return this.ipfs_pubsub_subscribe(this.channelName)(this.handleValidate);	
 		}
 
+		this.manualSettle = () =>
+		{
+			this.ipfs_pubsub_unsubscribe(this.channelName).then((rc) => {
+				return this.makeMerkleTreeAndUploadRoot();
+			})
+			.then((QID) =>
+                        {
+                                return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
+                        });
+		}
+
+		// high-level utilities
 		this.orderList = (start, end) => {
 			let header = ['Optract Addr', 'Expire Time', 'Total Value (DAI)', 'ETH Amount', 'Optract Price (DAI)', 'Filled (bool)'];
 			let holder = ['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'];

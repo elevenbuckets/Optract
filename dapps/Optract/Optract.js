@@ -2,6 +2,8 @@
 
 const ethUtils = require('ethereumjs-utils');
 const BladeIronClient = require('bladeiron_api'); // 11BE BladeIron Client API
+const xrange = require('xrange');
+const AsciiTable = require('ascii-table');
 
 // Helper functions, may go into bladeiron_api later
 const toBool = (str) =>
@@ -74,8 +76,7 @@ class Optract extends BladeIronClient {
 
                 this.activeOptracts = (start, length, ownerAddr = '0x0') => 
 		{
-                        console.log("LOG: return arrays:");
-                        console.log("     addr, expiretime (unix time in sec), total price of ETH (DAI), ETH amount, option price (DAI), filled(bool)");
+                        //console.log("     addr, expiretime (unix time in sec), total price of ETH (DAI), ETH amount, option price (DAI), filled(bool)");
                         return this.call(this.ctrName)('activeOptracts')(start, length, ownerAddr).then((rc) => {
                                 return rc;
                         })
@@ -83,8 +84,7 @@ class Optract extends BladeIronClient {
 
                 this.inactiveOptracts = (start, length, ownerAddr = '0x0') =>
 		{
-                        console.log("LOG: return arrays:");
-                        console.log("     addr, expiretime (unix time in sec), total price of ETH (DAI), ETH amount, option price (DAI), filled(bool)");
+                        //console.log("     addr, expiretime (unix time in sec), total price of ETH (DAI), ETH amount, option price (DAI), filled(bool)");
                         return this.call(this.ctrName)('inactiveOptracts')(start, length, ownerAddr).then((rc) => {
                                 return rc;
                         })
@@ -242,12 +242,12 @@ class Optract extends BladeIronClient {
 			console.log(`<<<<<<<<`);
 
                         rlpObjs.map((ro, idx) => {
-                                if (ro[0] === nclist[idx-1]) {
+                                if (ro[0] === nclist[idx-1]) { // overwrite previous tx with later one of same nonce
 					rlplist[idx-1] = rlplist[idx];
 					rlplist[idx] = null;
 					pldlist[idx-1] = ro[5];
 					pldlist[idx] = null;
-				} else if (pldlist.indexOf(ro[5]) !== pldlist.lastIndexOf(rc[5])) {
+				} else if (pldlist.indexOf(ro[5]) !== pldlist.lastIndexOf(ro[5])) { // remote duplicates
                                         rlplist[idx] = null;
 					pldlist[idx] = null;
                                 }
@@ -369,6 +369,77 @@ class Optract extends BladeIronClient {
                         })
                 }
 
+		// entrance functions
+		//
+		// For now, we simply initialize pubsub channels (and RAFT channel soon for validators!) and then:
+		//  - buyer or seller will get CLI control back and they can start querying and trade
+		//  - validator node will be controlled by a BOT routine.
+		this.start = () => 
+		{
+			this.channelName = ethUtils.bufferToHex(ethUtils.sha256(this.ctrAddrBook[this.ctrName]));
+			this.channelACK  = [ ...this.channelName ].reverse().join('');
+			
+			return true;			
+		}
+
+		this.startValidate = () =>
+		{
+			this.channelName = ethUtils.bufferToHex(ethUtils.sha256(this.ctrAddrBook[this.ctrName]));
+			this.channelACK  = [ ...this.channelName ].reverse().join('');
+			
+			return true;			
+		}
+
+		this.orderList = (start, end) => {
+			let header = ['Optract Addr', 'Expire Time', 'Total Value (DAI)', 'ETH Amount', 'Optract Price (DAI)', 'Filled (bool)'];
+			let holder = ['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'];
+			return this.activeOptracts(start,end).then((raw) => {
+				let len = raw[0].length; 
+				let xr  = xrange(0, len).toArray();
+				let out = xr.map((i) => { return [] }); 
+
+				raw.map((j) => { 
+					xr.map((f) => { out[f] = [ ...out[f], j[f] ] });
+				});
+				
+				let table = new AsciiTable('Optract Active Orders');
+				table.setHeading(...header);
+
+				if (out.length > 0) {
+					out.map((o) => { table.addRow(...o) });
+				} else {
+					table.addRow(...holder);
+				}
+				
+				console.log(table.toString());
+				return 	
+			})
+		}	
+	
+		this.inactiveList = (start, end) => {
+			let header = ['Optract Addr', 'Expire Time', 'Total Value (DAI)', 'ETH Amount', 'Optract Price (DAI)', 'Filled (bool)'];
+			let holder = ['N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'];
+			return this.inactiveOptracts(start,end).then((raw) => {
+				let len = raw[0].length; 
+				let xr  = xrange(0, len).toArray();
+				let out = xr.map((i) => { return [] }); 
+
+				raw.map((j) => { 
+					xr.map((f) => { out[f] = [ ...out[f], j[f] ] });
+				});
+				
+				let table = new AsciiTable('Optract Inactive Orders');
+				table.setHeading(...header);
+
+				if (out.length > 0) {
+					out.map((o) => { table.addRow(...o) });
+				} else {
+					table.addRow(...holder);
+				}
+				console.log(table.toString());
+				return 	
+			})
+		}		
         }
 }
 

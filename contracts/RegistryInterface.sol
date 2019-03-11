@@ -2,9 +2,9 @@ pragma solidity ^0.5.2;
 
 interface iOptractRegistry { // PoC ETH-DAI Optract
 
-	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period) external;
+	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period, uint optionPrice) external;
 	function destructRecord() external;
-	function queryInitPrice() external view returns (uint);
+	function queryOptionMinPrice() external view returns (uint);
 	function isExpired(address optractAddress) external view returns (bool);
 	function getExpireTime() external view returns (uint);
         function queryOptractRecords(address _addr) external view returns (uint, uint, address);

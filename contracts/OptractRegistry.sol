@@ -8,7 +8,7 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 	address[3] public operators;
 	address public currencyTokenAddr; // presumably 'DAI'
 	address public blkAddr; // side-chain merkle records
-	uint public initialPayment = 5000000000000000000; // 5 DAIs
+	uint public constant optionMinPrice = 5000000000000000000; // 5 DAIs
 	uint public totalOpts = 0;
 	bool public paused = false;
 
@@ -38,8 +38,9 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 		currencyTokenAddr = _currencyTokenAddr;
 	}
 
-	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period) external notPaused {
-                require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= initialPayment);
+	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period, uint optionPrice) external notPaused {
+	        require(optionPrice >= optionMinPrice);
+                require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= optionPrice);
                 // require(period * 1 days >= 30 days && period * 1 days <= 365 days);
                 // require(ETHAmount >= 3 ether);
                 // for debug purpose, use ridiculously small values:
@@ -48,9 +49,9 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 
 		optractRecord memory optRcd;
                 totalOpts = totalOpts + 1;
-                Optract opt = new Optract(ETHAmount, totalPrice, address(this), msg.sender, blkAddr, currencyTokenAddr);
+                Optract opt = new Optract(ETHAmount, totalPrice, optionPrice, address(this), msg.sender, blkAddr, currencyTokenAddr);
 
-                require(ERC20(currencyTokenAddr).transferFrom(msg.sender, address(opt), initialPayment));
+                require(ERC20(currencyTokenAddr).transferFrom(msg.sender, address(opt), optionPrice));
 
                 optRcd.id = totalOpts;
                 optRcd.expiredTime = block.timestamp + period * 1 days;
@@ -73,9 +74,9 @@ contract OptractRegistry { // PoC ETH-DAI Optract
         }
 
 	// Constant functions
-	function queryInitPrice() public view returns (uint) { 
-		return initialPayment; 
-	}
+	function queryOptionMinPrice() public view returns (uint) {
+	        return optionMinPrice;
+        }
 
 	function isExpired(address optractAddress) public view returns (bool) {
 		return block.timestamp > optractRecordsByAddress[optractAddress].expiredTime;

@@ -280,6 +280,10 @@
         "type": "uint256"
       },
       {
+        "name": "_optionPrice",
+        "type": "uint256"
+      },
+      {
         "name": "_registryAddr",
         "type": "address"
       },

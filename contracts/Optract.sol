@@ -41,6 +41,7 @@ contract Optract {
     constructor (
         uint256 _ethAmount,
         uint256 _totalPriceInDai,
+        uint256 _optionPrice,
         address _registryAddr,
         address _originalOwner,
         address _blkAddr,
@@ -48,6 +49,7 @@ contract Optract {
     ) public {
         ethAmount = _ethAmount;
         totalPriceInDai = _totalPriceInDai;
+        optionPrice = _optionPrice;
         registryAddr = _registryAddr;
         originalOwner = _originalOwner;
         blkAddr = _blkAddr;
@@ -56,7 +58,7 @@ contract Optract {
         onStock = true;  // for others to query
         currentOwner = _originalOwner;
         actionTime = block.timestamp;  // use this to avoid some too soon operations
-        // sblockTimeStep = iOptractRegistry(blkAddr).getSblockTimeStep();
+        // sblockTimeStep = iBlockRegistry(blkAddr).getSblockTimeStep();
         sblockTimeStep = 15 minutes;
     }
 
@@ -109,7 +111,6 @@ contract Optract {
     function fillInEth() public payable whenNotExpired {
         require(ethSeller == address(0), "others fill ETH already");  // only one can fill in ETH
         require(msg.value == ethAmount, "need to deposit exact amount of ETH");
-        optionPrice = iOptractRegistry(registryAddr).queryInitPrice();
         ethSeller = msg.sender;
         actionTime = block.timestamp;
         onStock = false;
@@ -172,6 +173,7 @@ contract Optract {
     function putOnStock(uint256 _newOptionPrice) public ethFilled ownerOnly whenBeforeLastExerciseChance {
         // call it when a buyer want to sell the option
         require(onStock == false, "can only put on Stock once");
+        require(_newOptionPrice >= iOptractRegistry(registryAddr).queryOptionMinPrice());  // at least 5 DAI
         // require(block.timestamp > actionTime + sblockTimeStep*2, "cannot operate too soon");  // comment for debug
         onStock = true;
         optionPrice = _newOptionPrice;

@@ -16,7 +16,7 @@ module.exports = function(deployer) {
   deployer.deploy(DAI).then((iDAI) => {
 	let DAIAddr = iDAI.address;
   	deployer.link(SafeMath, Optract);
-	return deployer.deploy(Optract, "0", "0", "0x0000000000000000000000000000000000000000"
+	return deployer.deploy(Optract, "0", "0", "0", "0x0000000000000000000000000000000000000000"
 					 , "0x0000000000000000000000000000000000000000"
 					 , "0x0000000000000000000000000000000000000000", DAIAddr).then(() => 
 	{

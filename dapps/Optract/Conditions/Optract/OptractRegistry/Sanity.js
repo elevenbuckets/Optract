@@ -4,7 +4,7 @@ module.exports =
 	{
 		return true;
 	},
-	OptractRegistry_queryInitPrice_sanity(addr, jobObj) 
+	OptractRegistry_queryOptionMinPrice_sanity(addr, jobObj)
 	{
 		return true;
 	},

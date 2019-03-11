@@ -49,13 +49,14 @@ class Optract extends BladeIronClient {
 		super(rpcport, rpchost, options);
 	        this.ctrName = 'OptractRegistry';
 
-                this.createOptract = (ethAmount, totalPrice, period) => 
+                this.createOptract = (ethAmount, totalPrice, period, optionPrice) =>
 		{
-			return this.queryInitPrice().then((tokenAmount) => 
+                        return this.call(this.ctrName)('queryOptionMinPrice')().then((optionMinPrice) =>
 			{
+			        if (optionPrice < optionMinPrice) throw "optionPrice too low";
                        		return this.manualGasBatch(2000000)(
-					this.Tk('DAI')('approve')(this.ctrAddrBook['OptractRegistry'], tokenAmount)(),
-                                        this.Tk(this.ctrName)('createOptract')(ethAmount, totalPrice, period)()
+					this.Tk('DAI')('approve')(this.ctrAddrBook['OptractRegistry'], optionPrice)(),
+                                        this.Tk(this.ctrName)('createOptract')(ethAmount, totalPrice, period, optionPrice)()
 				).then((QID) => 
 				{
 					return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
@@ -63,7 +64,8 @@ class Optract extends BladeIronClient {
 			});
                 }
 
-                this.queryInitPrice = () => { return this.call(this.ctrName)('queryInitPrice')() }
+                this.queryOptionPrice = (ctrName) => { return this.call(ctrName)('queryOptionPrice')() }
+                this.queryOptionMinPrice = () => { return this.call(this.ctrName)('queryOptionMinPrice')() }
 
                 this.isExpired = (optractAddr) => 
 		{

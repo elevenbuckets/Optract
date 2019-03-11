@@ -17,7 +17,7 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "initialPayment",
+    "name": "optionMinPrice",
     "outputs": [
       {
         "name": "",
@@ -27,7 +27,7 @@
     "payable": false,
     "stateMutability": "view",
     "type": "function",
-    "signature": "0x2199a57d"
+    "signature": "0x1e5fc06b"
   },
   {
     "constant": true,
@@ -120,6 +120,10 @@
       {
         "name": "period",
         "type": "uint256"
+      },
+      {
+        "name": "optionPrice",
+        "type": "uint256"
       }
     ],
     "name": "createOptract",
@@ -127,7 +131,7 @@
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function",
-    "signature": "0x6e9a01a2"
+    "signature": "0x9eee80b1"
   },
   {
     "constant": false,
@@ -142,7 +146,7 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "queryInitPrice",
+    "name": "queryOptionMinPrice",
     "outputs": [
       {
         "name": "",
@@ -152,7 +156,7 @@
     "payable": false,
     "stateMutability": "view",
     "type": "function",
-    "signature": "0x10bbc68a"
+    "signature": "0x64da7e24"
   },
   {
     "constant": true,

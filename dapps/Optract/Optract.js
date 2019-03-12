@@ -434,8 +434,9 @@ class Optract extends BladeIronClient {
 				let table = new AsciiTable('Optract Active Orders');
 				table.setHeading(...header);
 
-				if (out.length > 0) {
-					out.map((o) => { table.addRow(...o) });
+                                if (out.length > 0) {
+					out.map((o) => { o[1] = (new Date(o[1]*1000)).toString(); table.addRow(...o) });
+					// out.map((o) => { console.log(o[1]);table.addRow(...o) });
 				} else {
 					table.addRow(...holder);
 				}

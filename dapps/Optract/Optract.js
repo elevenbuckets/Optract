@@ -4,6 +4,9 @@ const ethUtils = require('ethereumjs-utils');
 const BladeIronClient = require('bladeiron_api'); // 11BE BladeIron Client API
 const xrange = require('xrange');
 const AsciiTable = require('ascii-table');
+const fs = require('fs');
+const path = require('path');
+const mkdirp = require('mkdirp');
 
 // Helper functions, may go into bladeiron_api later
 const toBool = (str) =>
@@ -266,7 +269,7 @@ class Optract extends BladeIronClient {
 
 			// is this block data structure good enough?
 			Object.keys(this.bidRecords[blkObj.initHeight]).map((addr) => {
-				if (this.winRecords[blkObj.initHeight][addr].length === 0) return;
+				if (this.bidRecords[blkObj.initHeight][addr].length === 0) return;
 				
 				let out = this.uniqRLP(addr);
 				blkObj.data[addr] = out.data;
@@ -305,7 +308,6 @@ class Optract extends BladeIronClient {
 				  	return;
 				} else if ( typeof(this.bidRecords[this.initHeight][address]) === 'undefined' ) {
                                      	this.bidRecords[this.initHeight][address] = [];
-				  	return;
                                // } else if ( this.bidRecords[this.initHeight][address].findIndex((x) => { return Buffer.compare(x.nonce, data.nonce) == 0 } ) !== -1) {
                                //         console.log(`Duplicate nonce (${address}): received nonce ${ethUtils.bufferToInt(data.nonce)} more than once`);
                                //         return;
@@ -321,7 +323,8 @@ class Optract extends BladeIronClient {
 				return;
 			}
 
-			return this.validPurchase(optract, address, ethUtils.bufferToInt(data.bidPrice)).then((rc) => {
+		        console.log('debug::' + parseInt(data.toJSON()[4], 16));
+			return this.validPurchase(optract, address, parseInt(data.toJSON()[4], 16)).then((rc) => {
 				if (rc !== true) return;
 
 				let sigout = {
@@ -392,13 +395,21 @@ class Optract extends BladeIronClient {
 		{
 			this.channelName = ethUtils.bufferToHex(ethUtils.sha256(this.ctrAddrBook[this.ctrName]));
 			this.channelACK  = [ ...this.channelName ].reverse().join('');
-			
-			return this.ipfs_pubsub_subscribe(this.channelName)(this.handleValidate);	
+			return this.call('BlockRegistry')('getSblockNo')().then((rc) => { 
+				this.initHeight = rc; this.bidRecords = {}; 
+				this.bidRecords[this.initHeight] = [];
+			        // this.winRecords = {};
+                                // this.winRecords[this.initHeight] = [];
+                        }).then(()=> {
+			        return mkdir_promise(path.join(this.configs.database, String(this.initHeight)))
+                        }).then(()=> {
+			        return this.ipfs_pubsub_subscribe(this.channelName)(this.handleValidate);	
+                        })
 		}
 
 		this.manualSettle = () =>
 		{
-			this.ipfs_pubsub_unsubscribe(this.channelName).then((rc) => {
+			return this.ipfs_pubsub_unsubscribe(this.channelName).then((rc) => {
 				return this.makeMerkleTreeAndUploadRoot();
 			})
 			.then((QID) =>

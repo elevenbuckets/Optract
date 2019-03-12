@@ -165,7 +165,7 @@ class Optract extends BladeIronClient {
 			{
 				if (!rc[1]) return false;
 				let _payload = ethUtils.hashPersonalMessage(Buffer.from(data));
-				this.client.call('unlockAndSign', [this.userWallet, Buffer.from(data)]).then((sig) =>
+				return this.client.call('unlockAndSign', [this.userWallet, Buffer.from(data)]).then((sig) =>
                                 {
 					let v = Number(sig.v);
                                         let r = Buffer.from(sig.r);
@@ -184,10 +184,10 @@ class Optract extends BladeIronClient {
 
 					let rlp = this.handleRLPx(fields)(params); // encode
 					
-					this.results[this.initHeight].push({...params, sent: false, rlp});
+					this.results[this.initHeight].push({...params, sent: false, rlp: rlp.serialize() });
 					
 					// IPFS_PUBSUB still needs to be added
-					this.sendClaims(this.initHeight, this.channelName);
+					return this.sendClaims(this.initHeight, this.channelName);
 				})
 			})
 		}
@@ -195,15 +195,21 @@ class Optract extends BladeIronClient {
 		this.sendClaims = (initHeight, channel) =>
                 {
 			console.log(`DEBUG: Enter sendClaims`);
-                        this.results[initHeight].map((robj, idx) => {
+                        return this.results[initHeight].map((robj, idx) => {
                                 if (!robj.sent) {
-                                        return this.ipfs_pubsub_publish(channel, robj.rlp.serialize()).then((rc) => {
-                                                console.log(`- Signed message broadcasted: Optract: ${robj.optractAddress}, Payload: ${robj.payload}`);
+                                        return this.ipfs_pubsub_publish(channel, robj.rlp).then((rc) => {
+                                                console.log(`- Signed message broadcasted: Nonce: ${robj.nonce}, Optract: ${robj.optractAddress}, Bid Price: ${robj.bidPrice}`);
+						return rc;
                                         })
                                         .catch((err) => { console.log(`Error in sendClaims`); console.trace(err); return false});
                                 }
                         })
                 }
+
+		this.sendHelper = (stats) =>
+		{
+			if (this.results[this.initHeight].length > 0) this.sendClaims(this.initHeight, this.channelName);
+		}
 
 		// for current round by validator only
                 this.generateBlock = (blkObj) =>
@@ -240,11 +246,11 @@ class Optract extends BladeIronClient {
                                 return r.toJSON();
                         });
 
-			console.log(`>>>>>>>>`);
+			/*console.log(`>>>>>>>>`);
                         console.log(`DEBUG: rlpObjs`); console.dir(rlpObjs);
                         console.log(`DEBUG: nclist`); console.dir(nclist);
                         console.log(`DEBUG: pldlist`); console.dir(pldlist);
-			console.log(`<<<<<<<<`);
+			console.log(`<<<<<<<<`); */
 
                         rlpObjs.map((ro, idx) => {
                                 if (ro[0] === nclist[idx-1]) { // overwrite previous tx with later one of same nonce
@@ -384,8 +390,8 @@ class Optract extends BladeIronClient {
 			this.channelName = ethUtils.bufferToHex(ethUtils.sha256(this.ctrAddrBook[this.ctrName]));
 			this.channelACK  = [ ...this.channelName ].reverse().join('');
 			this.call('BlockRegistry')('getSblockNo')().then((rc) => { 
-				this.initHeight = rc; this.results = {}; 
-				this.results[this.initHeight] = [];
+				this.initHeight = rc; 
+				this.results = {[this.initHeight] = []};
 			})
 			
 			return true;			
@@ -396,10 +402,8 @@ class Optract extends BladeIronClient {
 			this.channelName = ethUtils.bufferToHex(ethUtils.sha256(this.ctrAddrBook[this.ctrName]));
 			this.channelACK  = [ ...this.channelName ].reverse().join('');
 			return this.call('BlockRegistry')('getSblockNo')().then((rc) => { 
-				this.initHeight = rc; this.bidRecords = {}; 
-				this.bidRecords[this.initHeight] = [];
-			        // this.winRecords = {};
-                                // this.winRecords[this.initHeight] = [];
+				this.initHeight = rc;  
+				this.bidRecords = {[this.initHeight]: {}};
                         }).then(()=> {
 			        return mkdir_promise(path.join(this.configs.database, String(this.initHeight)))
                         }).then(()=> {

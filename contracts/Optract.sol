@@ -59,7 +59,7 @@ contract Optract {
         currentOwner = _originalOwner;
         actionTime = block.timestamp;  // use this to avoid some too soon operations
         // sblockTimeStep = iBlockRegistry(blkAddr).getSblockTimeStep();
-        sblockTimeStep = 15 minutes;
+        sblockTimeStep = 2 minutes;
     }
 
     modifier ownerOnly() {

@@ -113,13 +113,14 @@ class Optract extends BladeIronClient {
                 this.exercise = (ctrName) =>
                 {
                         if (! ctrName in this.ctrAddrBook ) throw "contract not found";
+                        // todo: be aware of expire time and know when can exercise
                         return this.call(ctrName)('actionTime')().then((time) =>{
-                                if (time - Math.floor(Date.now()/1000) < 600) {throw "too soon";}
+                                if (Math.floor(Date.now()/1000) - time < 900 ) {throw "too soon";}  // 900 = "sblockTimeStep" in Optract.sol
                                 return this.call(ctrName)('totalPriceInDai')().then((tokenAmount) => 
                                 {
                                         return this.manualGasBatch(2000000)(
                                                 this.Tk('DAI')('approve')(this.ctrAddrBook[ctrName], tokenAmount)(),
-                                                this.Tk(ctrName)(currentOwnerExercise)()()
+                                                this.Tk(ctrName)('currentOwnerExercise')()()
                                         ).then((QID) => 
                                         {
                                                 return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });

@@ -35,7 +35,7 @@ const mkdir_promise = (dirpath) =>
 const fields =
 [
    {name: 'nonce', length: 32, allowLess: true, default: new Buffer([]) },
-   {name: 'optractAddress', length: 20, allowZero: false, default: new Buffer([]) },
+   {name: 'optractAddress', length: 20, allowZero: true, default: new Buffer([]) },
    {name: 'originAddress', length: 20, allowZero: true, default: new Buffer([]) },
    {name: 'submitBlock', length: 32, allowLess: true, default: new Buffer([]) },
    {name: 'bidPrice', length: 32, allowLess: true, default: new Buffer([]) },
@@ -148,7 +148,7 @@ class Optract extends BladeIronClient {
 		this.submitNewBid = (ctrAddr, bidPrice, overWriteNonce = null) =>
 		{
 			let _nonce = overWriteNonce === null ? this.results[this.initHeight].length + 1 : overWriteNonce;
-			let data = abi.encodeParameters(
+			let data = this.abi.encodeParameters(
 				[ 'uint', 'address', 'address', 'uint' ],
 				[ _nonce, ctrAddr, this.userWallet, bidPrice ]
 			);
@@ -181,7 +181,7 @@ class Optract extends BladeIronClient {
 
 					let rlp = this.handleRLPx(fields)(params); // encode
 					
-					this.result[this.initHeight].push({...params, sent: false, rlp});
+					this.results[this.initHeight].push({...params, sent: false, rlp});
 					
 					// IPFS_PUBSUB still needs to be added
 					this.sendClaims(this.initHeight, this.channelName);
@@ -191,6 +191,7 @@ class Optract extends BladeIronClient {
 
 		this.sendClaims = (initHeight, channel) =>
                 {
+			console.log(`DEBUG: Enter sendClaims`);
                         this.results[initHeight].map((robj, idx) => {
                                 if (!robj.sent) {
                                         return this.ipfs_pubsub_publish(channel, robj.rlp.serialize()).then((rc) => {
@@ -346,7 +347,7 @@ class Optract extends BladeIronClient {
 		// checking bid conditions
 		this.validPurchase = (optract, buyer, bidPrice) => {
 			let p = [
-				this.memberStatus(buyer).then((rc) => { return rc[0] !== 'active'; }),
+				this.memberStatus(buyer).then((rc) => { return rc[0] === 'active'; }),
 				this.call(this.ctrName)('queryOptractRecords')(optract).then((rc) => { 
 					let t = rc[0]; 
 					return this.activeOptracts(t,t).then((a) => { 
@@ -379,6 +380,10 @@ class Optract extends BladeIronClient {
 		{
 			this.channelName = ethUtils.bufferToHex(ethUtils.sha256(this.ctrAddrBook[this.ctrName]));
 			this.channelACK  = [ ...this.channelName ].reverse().join('');
+			this.call('BlockRegistry')('getSblockNo')().then((rc) => { 
+				this.initHeight = rc; this.results = {}; 
+				this.results[this.initHeight] = [];
+			})
 			
 			return true;			
 		}

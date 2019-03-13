@@ -391,7 +391,7 @@ class Optract extends BladeIronClient {
 			this.channelACK  = [ ...this.channelName ].reverse().join('');
 			this.call('BlockRegistry')('getSblockNo')().then((rc) => { 
 				this.initHeight = rc; 
-				this.results = {[this.initHeight] = []};
+				this.results = {[this.initHeight]: []};
 			})
 			
 			return true;			

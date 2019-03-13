@@ -59,7 +59,7 @@ contract Optract {
         currentOwner = _originalOwner;
         actionTime = block.timestamp;  // use this to avoid some too soon operations
         // sblockTimeStep = iBlockRegistry(blkAddr).getSblockTimeStep();
-        sblockTimeStep = 2 minutes;
+        sblockTimeStep = 2 minutes;  // use a small value for debug purpose
     }
 
     modifier ownerOnly() {
@@ -197,7 +197,7 @@ contract Optract {
     function currentOwnerExercise() public ownerOnly whenCanExercise {
         require(block.timestamp > actionTime + sblockTimeStep, "cannot operate too soon");
         require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= totalPriceInDai);
-        onStock == false;
+        onStock = false;
         exercised = true;
 
         iOptractRegistry(registryAddr).destructRecord();  // update record in "registry"

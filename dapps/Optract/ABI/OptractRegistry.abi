@@ -99,6 +99,10 @@
       {
         "name": "_currencyTokenAddr",
         "type": "address"
+      },
+      {
+        "name": "_blkAddr",
+        "type": "address"
       }
     ],
     "payable": false,

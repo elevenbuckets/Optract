@@ -4,6 +4,8 @@ import "./ERC20.sol";
 import "./Optract.sol";
 //import "./SafeMath.sol";
 
+// todo: memberOnly
+
 contract OptractRegistry { // PoC ETH-DAI Optract
 	address[3] public operators;
 	address public currencyTokenAddr; // presumably 'DAI'
@@ -33,9 +35,10 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 	}
 
 	// Constructor
-	constructor(address _currencyTokenAddr) public {
+	constructor(address _currencyTokenAddr, address _blkAddr) public {
 		operators[0] = msg.sender;
 		currencyTokenAddr = _currencyTokenAddr;
+		blkAddr = _blkAddr;
 	}
 
 	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period, uint optionPrice) external notPaused {

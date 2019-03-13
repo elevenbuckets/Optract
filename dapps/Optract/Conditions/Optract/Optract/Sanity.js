@@ -9,10 +9,6 @@ module.exports =
 	{
 		return true;
 	},
-	Optract_claimOptract_sanity(addr, jobObj) 
-	{
-		return true;
-	},
 	Optract_putOnStock_sanity(addr, jobObj) 
 	{
 		return true;

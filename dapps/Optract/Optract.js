@@ -132,15 +132,16 @@ class Optract extends BladeIronClient {
                         }) 
                 }
 
-                this.claimOptract = (ctrName) =>
+                this.claimOptract = (ctrName, bidPrice) =>
                 {
                         if (! ctrName in this.ctrAddrBook ) throw "contract not found";
                         // todo: obtain proof, isLeft, targetLeat, merkleRoot
                         let [proof, isLeft, targetLeat, merkleRoot] = [[], [], '0x0', '0x0'];
                         return this.call(ctrName)('optionPrice')().then((tokenAmount) => {
+                                if (bidPrice <= tokenAmount) throw "bid Price too low";
                                 return this.manualGasBatch(2000000)(
-                                        this.Tk('DAI')('approve')(this.ctrAddrBook[ctrName], tokenAmount + tokenAmount/500)(),
-                                        this.Tk(ctrName)('claimOptract')(proof, isLeft, targetLeat, merkleRoot)()
+                                        this.Tk('DAI')('approve')(this.ctrAddrBook[ctrName], Number(bidPrice) + Number(bidPrice)/500)(),
+                                        this.Tk(ctrName)('claimOptract')(proof, isLeft, targetLeat, merkleRoot, bidPrice)()
                                 ).then((QID) =>
                                 {
                                         return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
@@ -150,6 +151,7 @@ class Optract extends BladeIronClient {
 
 		this.submitNewBid = (ctrAddr, bidPrice, overWriteNonce = null) =>
 		{
+		        if (typeof(this.channelName) === 'undefined') throw 'run app.Optract.start() first';
 			let _nonce = overWriteNonce === null ? this.results[this.initHeight].length + 1 : overWriteNonce;
 			let data = this.abi.encodeParameters(
 				[ 'uint', 'address', 'address', 'uint' ],
@@ -356,7 +358,8 @@ class Optract extends BladeIronClient {
 		// checking bid conditions
 		this.validPurchase = (optract, buyer, bidPrice) => {
 			let p = [
-				this.memberStatus(buyer).then((rc) => { return rc[0] === 'active'; }),
+				// this.memberStatus(buyer).then((rc) => { return rc[0] === 'active'; }),
+                                this.memberStatus(buyer).then((rc) => { return true }),  // for debug
 				this.call(this.ctrName)('queryOptractRecords')(optract).then((rc) => { 
 					let t = rc[0]; 
 					return this.activeOptracts(t,t).then((a) => { 
@@ -466,7 +469,7 @@ class Optract extends BladeIronClient {
 				table.setHeading(...header);
 
 				if (out.length > 0) {
-					out.map((o) => { table.addRow(...o) });
+					out.map((o) => { o[1] = (new Date(o[1]*1000)).toString(); table.addRow(...o) });
 				} else {
 					table.addRow(...holder);
 				}

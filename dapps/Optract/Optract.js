@@ -257,8 +257,7 @@ class Optract extends BladeIronClient {
 		{
 			return this.loadPreviousLeaves(ipfsHash).then((leaves) => {
 			        let results;
-			        console.log(leaves);
-			        console.log(targetLeaf);
+                                targetLeaf = ethUtils.bufferToHex(targetLeaf);
 			        results = this.getMerkleProof(leaves, targetLeaf);
                                 if (!results) {
                                         console.log('Warning! On-chain merkle validation will FAIL!!!');
@@ -267,9 +266,9 @@ class Optract extends BladeIronClient {
 			        let proof = results[0];
                                 let isLeft = results[1];
                                 let merkleRoot = results[2];
-                                return this.call(this.ctrName)('merkleTreeValidator')(proof, isLeft, targetLeaf, merkleRoot).then((rc) => {
+                                return this.call('BlockRegistry')('merkleTreeValidator')(proof, isLeft, targetLeaf, merkleRoot).then((rc) => {
                                         if (rc) {
-                                                this.myClaims = { ...myClaims, proof:proof, isLeft:isLeft, targetLeaf:targetLeaf };
+                                                this.myClaims = { ...this.myClaims, proof:proof, isLeft:isLeft, targetLeaf:targetLeaf };
                                         } else {
                                                 console.log('Warning! On-chain merkle validation will FAIL!!!');
                                         }
@@ -286,7 +285,7 @@ class Optract extends BladeIronClient {
 			return this.ipfsRead(ipfsHash).then((blockBuffer) => {
 				let blockJSON = JSON.parse(blockBuffer.toString());
 
-				if (Number(blockJSON.initHeight) !== this.initHeight) {
+				if (Number(blockJSON.initHeight) !== Number(this.initHeight)) {
 					console.log(`Oh No! Did not get IPFS data for ${this.initHeight}, got data for round ${blockJSON.initHeight} instead`);
 					return [];
 				}

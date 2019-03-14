@@ -16,6 +16,14 @@ module.exports =
 	{
 		return true;
 	},
+	OptractRegistry_setCurrencyTokenAddr_sanity(addr, jobObj) 
+	{
+		return true;
+	},
+	OptractRegistry_setBlkAddr_sanity(addr, jobObj) 
+	{
+		return true;
+	},
 	OptractRegistry_activeOptracts_sanity(addr, jobObj) 
 	{
 		return true;

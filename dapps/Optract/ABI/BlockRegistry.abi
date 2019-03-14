@@ -179,6 +179,38 @@
   },
   {
     "constant": true,
+    "inputs": [
+      {
+        "name": "proof",
+        "type": "bytes32[]"
+      },
+      {
+        "name": "isLeft",
+        "type": "bool[]"
+      },
+      {
+        "name": "targetLeaf",
+        "type": "bytes32"
+      },
+      {
+        "name": "_merkleRoot",
+        "type": "bytes32"
+      }
+    ],
+    "name": "merkleTreeValidator",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "pure",
+    "type": "function",
+    "signature": "0xb8f69e37"
+  },
+  {
+    "constant": true,
     "inputs": [],
     "name": "getSblockNo",
     "outputs": [
@@ -219,5 +251,84 @@
     "stateMutability": "view",
     "type": "function",
     "signature": "0xbb141cf4"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "_idx",
+        "type": "uint256"
+      }
+    ],
+    "name": "queryValidator",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0x810e0b20"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "queryManagers",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[4]"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xca48c69d"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_newValidator",
+        "type": "address"
+      },
+      {
+        "name": "_idx",
+        "type": "uint256"
+      }
+    ],
+    "name": "setValidator",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xabb9406b"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_newManager",
+        "type": "address"
+      }
+    ],
+    "name": "setManager",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xd0ebdbe7"
   }
 ]

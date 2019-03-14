@@ -134,12 +134,12 @@ contract Optract {
         uint256 bidPrice
     ) public ethFilled whenBeforeLastExerciseChance returns(bool) {
         // verify:  require(calculateLeaf(msg.sender, some_more_data...) == targetLeaf))
-        // require(iBlockRegistry(blkAddr).merkleTreeValidator(proof, isLeft, targetLeaf, merkleRoot) == true, "invalid Merkle Proof");
+        require(iBlockRegistry(blkAddr).merkleTreeValidator(proof, isLeft, targetLeaf, merkleRoot) == true, "invalid Merkle Proof");
 	require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= bidPrice + bidPrice/500);
 	require(bidPrice > optionPrice);
         uint256 sblockNo = iBlockRegistry(blkAddr).getSblockNo();
 
-        // new owner; note the ownership could transfer several times in one sblockNo
+        // new owner; the ownership could transfer several times in one sblockNo
         if (onStock == true && lastSblockNo == 0 && lastOprice == 0) {  // for first one who claim during current sblockNo
             onStock = false;
             lastOwner = currentOwner;  // the owner before this sblockNo
@@ -150,7 +150,7 @@ contract Optract {
             actionTime = block.timestamp;
 
             ERC20(currencyTokenAddr).transferFrom(msg.sender, lastOwner, bidPrice);
-            // ERC20(currencyTokenAddr).transferFrom(msg.sender, iBlockRegistry(blkAddr), bidPrice/500);  // 0.2% fee to block contract
+            ERC20(currencyTokenAddr).transferFrom(msg.sender, blkAddr, bidPrice/500);  // 0.2% fee to block contract
         } else if (onStock == false && bidPrice > lastOprice && sblockNo == lastSblockNo) {  // happen when second buyer coming in same sblock
             // in same sblock, highest bid win the contract, and the prevBidder get money back
             address prevBidder = currentOwner;
@@ -162,7 +162,7 @@ contract Optract {
 
             ERC20(currencyTokenAddr).transferFrom(msg.sender, prevBidder, prevBidPrice);
             ERC20(currencyTokenAddr).transferFrom(msg.sender, lastOwner, bidPrice - prevBidPrice);
-            // ERC20(currencyTokenAddr).transferFrom(msg.sender, iBlockRegistry(blkAddr), bidPrice/500);  // 0.2% fee to block contract
+            ERC20(currencyTokenAddr).transferFrom(msg.sender, blkAddr, bidPrice/500);  // 0.2% fee to block contract
         } else {
             revert();
         }

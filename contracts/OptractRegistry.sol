@@ -77,7 +77,7 @@ contract OptractRegistry { // PoC ETH-DAI Optract
         }
 
 	// Constant functions
-	function queryOptionMinPrice() public view returns (uint) {
+	function queryOptionMinPrice() public pure returns (uint) {
 	        return optionMinPrice;
         }
 
@@ -96,6 +96,19 @@ contract OptractRegistry { // PoC ETH-DAI Optract
                 return (optractRecordsByAddress[_addr].id,
                         optractRecordsByAddress[_addr].expiredTime,
                         optractRecordsByAddress[_addr].initialOwner);
+        }
+
+        // upgradable
+        function setCurrencyTokenAddr(address newCurrencyTokenAddr) public operatorOnly returns (bool) {
+                require(newCurrencyTokenAddr != address(0));
+                currencyTokenAddr = newCurrencyTokenAddr;
+                return true;
+        }
+
+        function setBlkAddr(address newBlkAddr) public operatorOnly returns (bool) {
+                require(newBlkAddr != address(0));
+                blkAddr = newBlkAddr;
+                return true;
         }
 
         // Constant functions: list active and inactive optracts

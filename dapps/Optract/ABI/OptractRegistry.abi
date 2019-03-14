@@ -158,7 +158,7 @@
       }
     ],
     "payable": false,
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function",
     "signature": "0x64da7e24"
   },
@@ -224,6 +224,46 @@
     "stateMutability": "view",
     "type": "function",
     "signature": "0x38440451"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "newCurrencyTokenAddr",
+        "type": "address"
+      }
+    ],
+    "name": "setCurrencyTokenAddr",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x005bc3f4"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "newBlkAddr",
+        "type": "address"
+      }
+    ],
+    "name": "setBlkAddr",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x70747092"
   },
   {
     "constant": true,

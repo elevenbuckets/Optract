@@ -154,7 +154,7 @@ class Optract extends BladeIronClient {
                 */
                 this.fillInEth = (ctrName) =>
                 {
-                        if (! ctrName in this.ctrAddrBook ) throw "contract not found";
+                        if (! (ctrName in this.ctrAddrBook) ) throw "contract not found";
                         return this.call(ctrName)('ethAmount')().then((ethAmount) => {
                                 return this.sendTk(ctrName)('fillInEth')()(ethAmount);
                         })
@@ -162,7 +162,7 @@ class Optract extends BladeIronClient {
 
 		this.putOnStock = (ctrName, optPrice) =>
 		{
-                        if (! ctrName in this.ctrAddrBook ) throw "contract not found";
+                        if (! (ctrName in this.ctrAddrBook) ) throw "contract not found";
 			return this.call(ctrName)('queryOnStock')().then((rc) => {
 				if (rc === true) { return false; }
 				return this.sendTk(ctrName)('putOnStock')(optPrice)();	
@@ -171,39 +171,132 @@ class Optract extends BladeIronClient {
 
                 this.exercise = (ctrName) =>
                 {
-                        if (! ctrName in this.ctrAddrBook ) throw "contract not found";
+                        if (! (ctrName in this.ctrAddrBook) ) throw "contract not found";
                         // todo: be aware of expire time and know when can exercise
-                        return this.call(ctrName)('actionTime')().then((time) =>{
-                                if (Math.floor(Date.now()/1000) - time < 900 ) {throw "too soon";}  // 900 = "sblockTimeStep" in Optract.sol
-                                return this.call(ctrName)('totalPriceInDai')().then((tokenAmount) => 
-                                {
-                                        return this.manualGasBatch(2000000)(
-                                                this.Tk('DAI')('approve')(this.ctrAddrBook[ctrName], tokenAmount)(),
-                                                this.Tk(ctrName)('currentOwnerExercise')()()
-                                        ).then((QID) => 
+                        return this.call(ctrName)('currentOwner')().then((owner) => {
+                                if (owner !== this.userWallet) throw `not your contract (owned by ${owner})`;
+                                return this.call(ctrName)('actionTime')().then((time) =>{
+                                        if (Math.floor(Date.now()/1000) - time < 900 ) {throw "too soon";}  // 900 = "sblockTimeStep" in Optract.sol
+                                        return this.call(ctrName)('totalPriceInDai')().then((tokenAmount) =>
                                         {
-                                                return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
+                                                return this.manualGasBatch(2000000)(
+                                                        this.Tk('DAI')('approve')(this.ctrAddrBook[ctrName], tokenAmount)(),
+                                                        this.Tk(ctrName)('currentOwnerExercise')()()
+                                                ).then((QID) =>
+                                                {
+                                                        return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
+                                                });
                                         });
-                                });
-                        }) 
+                                })
+                        });
                 }
 
-                this.claimOptract = (ctrName, bidPrice) =>
+                // this.claimOptract = (ctrName, bidPrice) =>
+                // {
+                //         if (! (ctrName in this.ctrAddrBook) ) throw "contract not found";
+                //         // todo: obtain proof, isLeft, targetLeaf, merkleRoot
+                //         let [proof, isLeft, targetLeaf, merkleRoot] = [[], [], '0x0', '0x0'];
+                //         return this.call(ctrName)('optionPrice')().then((tokenAmount) => {
+                //                 if (bidPrice <= tokenAmount) throw "bid Price too low";
+                //                 return this.manualGasBatch(2000000)(
+                //                         this.Tk('DAI')('approve')(this.ctrAddrBook[ctrName], Number(bidPrice) + Number(bidPrice)/500)(),
+                //                         this.Tk(ctrName)('claimOptract')(proof, isLeft, targetLeaf, merkleRoot, bidPrice)()
+                //                 ).then((QID) =>
+                //                 {
+                //                         return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
+                //                 });
+                //         })
+                // }
+
+                this.claimOptract = (ctrName) =>
                 {
-                        if (! ctrName in this.ctrAddrBook ) throw "contract not found";
-                        // todo: obtain proof, isLeft, targetLeat, merkleRoot
-                        let [proof, isLeft, targetLeat, merkleRoot] = [[], [], '0x0', '0x0'];
-                        return this.call(ctrName)('optionPrice')().then((tokenAmount) => {
-                                if (bidPrice <= tokenAmount) throw "bid Price too low";
-                                return this.manualGasBatch(2000000)(
-                                        this.Tk('DAI')('approve')(this.ctrAddrBook[ctrName], Number(bidPrice) + Number(bidPrice)/500)(),
-                                        this.Tk(ctrName)('claimOptract')(proof, isLeft, targetLeat, merkleRoot, bidPrice)()
-                                ).then((QID) =>
-                                {
-                                        return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
-                                });
+                        if (! (ctrName in this.ctrAddrBook) ) throw "contract not found";
+                        return this.call('BlockRegistry')('getSblockNo')().then((blockNo) => {
+                                return this.call('BlockRegistry')('getBlockInfo')(blockNo - 1).then((plist) => {
+                                        let mr = plist[1]; // block merkle root
+                                        let bd = plist[2]; // IPFS hash of block
+                                        if (mr !== '0x0' && bd !== '') {
+                                                this.validateMerkleProof(this.myClaims.claimHash, bd).then((rc) => {
+                                                        let args = [
+                                                            this.myClaims.proof,
+                                                            this.myClaims.isLeft,
+                                                            this.myClaims.targetLeaf,
+                                                            mr,
+                                                            this.myClaims.bidPrice
+                                                        ];
+                                                        if (rc) {
+                                                                return this.sendTk(ctrName)('claimOptract')(...args)()
+                                                                           .then((qid) => { return this.getReceipts(qid); })
+                                                                           .then((rx) => { 
+                                                                                let tx = rx[0];
+                                                                                console.dir(tx);
+                                                                                if (tx.status !== '0x1') {
+                                                                                        throw "Claim Optract Failed!";
+                                                                                } else {
+                                                                                        console.log(`***** Congretulation!!! YOU GOT THE CONTRACT!!! *****`);
+                                                                                        console.log(`MerkleRoot: ${mr}`);
+                                                                                        console.log(`BlockData (IPFS): ${bd}`);
+                                                                                        console.log(`ClaimHash: ${myClaimHash}`);
+                                                                                }
+                                                                           })
+                                                                           .catch((err) => { console.trace(err); return; });
+                                                        } else {
+                                                                console.log('Merkle Proof Process FAILED!!!!!!'); 
+                                                                console.log(`MerkleRoot: ${mr}`);
+                                                                console.log(`BlockData (IPFS): ${bd}`);
+                                                                console.log(`ClaimHash: ${myClaimHash}`);
+                                                                // TODO: What now?
+                                                        }
+                                                })
+                                        }
+                                })
                         })
                 }
+
+                this.validateMerkleProof = (targetLeaf, ipfsHash) => 
+		{
+			return this.loadPreviousLeaves(ipfsHash).then((leaves) => {
+			        let results;
+			        console.log(leaves);
+			        console.log(targetLeaf);
+			        results = this.getMerkleProof(leaves, targetLeaf);
+                                if (!results) {
+                                        console.log('Warning! On-chain merkle validation will FAIL!!!');
+                                        return false
+                                }
+			        let proof = results[0];
+                                let isLeft = results[1];
+                                let merkleRoot = results[2];
+                                return this.call(this.ctrName)('merkleTreeValidator')(proof, isLeft, targetLeaf, merkleRoot).then((rc) => {
+                                        if (rc) {
+                                                this.myClaims = { ...myClaims, proof:proof, isLeft:isLeft, targetLeaf:targetLeaf };
+                                        } else {
+                                                console.log('Warning! On-chain merkle validation will FAIL!!!');
+                                        }
+                                        return rc;
+                                })
+			})
+			.catch((err) => { console.log(`ERROR in validateMerkleProof`); console.trace(err); return false; })
+                }
+
+		this.loadPreviousLeaves = (ipfsHash) => 
+		{
+			// load block data from IPFS
+			// put them in leaves for merkleTree calculation
+			return this.ipfsRead(ipfsHash).then((blockBuffer) => {
+				let blockJSON = JSON.parse(blockBuffer.toString());
+
+				if (Number(blockJSON.initHeight) !== this.initHeight) {
+					console.log(`Oh No! Did not get IPFS data for ${this.initHeight}, got data for round ${blockJSON.initHeight} instead`);
+					return [];
+				}
+
+				let leaves = [];
+				Object.values(blockJSON.data).map((obj) => { return leaves = [ ...leaves, obj[0].payload ]; });
+
+				return leaves;
+			})
+		}
 
 		this.submitNewBid = (ctrAddr, bidPrice, overWriteNonce = null) =>
 		{
@@ -223,6 +316,7 @@ class Optract extends BladeIronClient {
 			{
 				if (!rc[1]) return false;
 				let _payload = ethUtils.hashPersonalMessage(Buffer.from(data));
+			        this.myClaims.claimHash = _payload;
 				return this.client.call('unlockAndSign', [this.userWallet, Buffer.from(data)]).then((sig) =>
                                 {
 					let v = Number(sig.v);
@@ -243,6 +337,7 @@ class Optract extends BladeIronClient {
 					let rlp = this.handleRLPx(fields)(params); // encode
 					
 					this.results[this.initHeight].push({...params, sent: false, rlp: rlp.serialize() });
+				        this.myClaims.bidPrice = bidPrice;
 					
 					// IPFS_PUBSUB still needs to be added
 					return this.sendClaims(this.initHeight, this.channelName);
@@ -451,6 +546,7 @@ class Optract extends BladeIronClient {
 			this.call('BlockRegistry')('getSblockNo')().then((rc) => { 
 				this.initHeight = rc; 
 				this.results = {[this.initHeight]: []};
+				this.myClaims = {};
 			})
 			
 			return true;			
@@ -472,13 +568,16 @@ class Optract extends BladeIronClient {
 
 		this.manualSettle = () =>
 		{
-			return this.ipfs_pubsub_unsubscribe(this.channelName).then((rc) => {
-				return this.makeMerkleTreeAndUploadRoot();
-			})
-			.then((QID) =>
-                        {
-                                return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
-                        });
+			return this.call('BlockRegistry')('getSblockNo')().then((height) => { 
+			    this.initHeight = height;
+                            return this.ipfs_pubsub_unsubscribe(this.channelName).then((rc) => {
+                                    return this.makeMerkleTreeAndUploadRoot();
+                            })
+                            .then((QID) =>
+                            {
+                                    return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
+                            });
+                        })
 		}
 
 		// high-level utilities

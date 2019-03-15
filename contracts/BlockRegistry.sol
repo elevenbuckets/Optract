@@ -10,7 +10,7 @@ contract BlockRegistry{
     address[16] public validators;
     uint constant public period_all = 20;
     uint public initHeight;
-    uint public sblockNo;
+    uint public sblockNo = 1;
     uint public prevTimeStamp;
     uint public sblockTimeStep = 15 minutes;  // better way to define?
 

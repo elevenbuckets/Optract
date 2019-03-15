@@ -136,7 +136,7 @@ contract Optract {
         // verify:  require(calculateLeaf(msg.sender, some_more_data...) == targetLeaf))
         require(iBlockRegistry(blkAddr).merkleTreeValidator(proof, isLeft, targetLeaf, merkleRoot) == true, "invalid Merkle Proof");
 	require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= bidPrice + bidPrice/500);
-	require(bidPrice > optionPrice);
+	require(bidPrice > optionPrice);  // todo: bidPrice > optionPrice && bidPrice - optionPrice > 0.01 Ether
         uint256 sblockNo = iBlockRegistry(blkAddr).getSblockNo();
 
         // new owner; the ownership could transfer several times in one sblockNo
@@ -166,7 +166,7 @@ contract Optract {
         } else {
             revert();
         }
-        // optionPrice = optionPrice*mul(1.05);  // set new default price
+        optionPrice = bidPrice;
         return true;
     }
 

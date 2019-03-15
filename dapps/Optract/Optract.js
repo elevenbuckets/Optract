@@ -163,10 +163,13 @@ class Optract extends BladeIronClient {
 		this.putOnStock = (ctrName, optPrice) =>
 		{
                         if (! (ctrName in this.ctrAddrBook) ) throw "contract not found";
-			return this.call(ctrName)('queryOnStock')().then((rc) => {
-				if (rc === true) { return false; }
-				return this.sendTk(ctrName)('putOnStock')(optPrice)();	
-			})
+                        return this.call(ctrName)('currentOwner')().then((owner) => {
+                                if (owner !== this.userWallet) throw `not your contract (owned by ${owner})`;
+                                return this.call(ctrName)('queryOnStock')().then((rc) => {
+                                        if (rc === true) { return false; }
+                                        return this.sendTk(ctrName)('putOnStock')(optPrice)();
+                                })
+                        })
 		}
 
                 this.exercise = (ctrName) =>
@@ -191,23 +194,6 @@ class Optract extends BladeIronClient {
                         });
                 }
 
-                // this.claimOptract = (ctrName, bidPrice) =>
-                // {
-                //         if (! (ctrName in this.ctrAddrBook) ) throw "contract not found";
-                //         // todo: obtain proof, isLeft, targetLeaf, merkleRoot
-                //         let [proof, isLeft, targetLeaf, merkleRoot] = [[], [], '0x0', '0x0'];
-                //         return this.call(ctrName)('optionPrice')().then((tokenAmount) => {
-                //                 if (bidPrice <= tokenAmount) throw "bid Price too low";
-                //                 return this.manualGasBatch(2000000)(
-                //                         this.Tk('DAI')('approve')(this.ctrAddrBook[ctrName], Number(bidPrice) + Number(bidPrice)/500)(),
-                //                         this.Tk(ctrName)('claimOptract')(proof, isLeft, targetLeaf, merkleRoot, bidPrice)()
-                //                 ).then((QID) =>
-                //                 {
-                //                         return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
-                //                 });
-                //         })
-                // }
-
                 this.claimOptract = (ctrAddr) =>
                 {
                         return this.connectABI('Optract', ctrAddr, ctrAddr).then(()=>{
@@ -218,6 +204,7 @@ class Optract extends BladeIronClient {
                                                 let bd = plist[2]; // IPFS hash of block
                                                 if (mr !== '0x0' && bd !== '') {
                                                         this.validateMerkleProof(this.myClaims.claimHash, bd).then((rc) => {
+                                                                let myClaimHash = this.myClaims.claimHash.toString('hex');
                                                                 let args = [
                                                                     this.myClaims.proof,
                                                                     this.myClaims.isLeft,
@@ -226,7 +213,7 @@ class Optract extends BladeIronClient {
                                                                     this.myClaims.bidPrice
                                                                 ];
                                                                 if (rc) {
-                                                                        console.log("debug in claimOptract (proof, isLeft, targetLeaf, mr, bidPrice)");
+                                                                        console.log("* debug in claimOptract (proof, isLeft, targetLeaf, mr, bidPrice)");
                                                                         console.log(...args);
                                                                         let totalAllowance = this.myClaims.bidPrice * 1.002;  // 0.2 % tx fee
                                                                         return this.sendTk('DAI')('approve')(ctrAddr, totalAllowance)().then(()=>{
@@ -238,10 +225,10 @@ class Optract extends BladeIronClient {
                                                                                                 if (tx.status !== '0x1') {
                                                                                                         throw "Claim Optract Failed!";
                                                                                                 } else {
-                                                                                                        console.log(`***** Congretulation! YOU GOT THE CONTRACT!!! *****`);
+                                                                                                        console.log(`***** YOU GOT THE CONTRACT *****`);
                                                                                                         console.log(`MerkleRoot: ${mr}`);
                                                                                                         console.log(`BlockData (IPFS): ${bd}`);
-                                                                                                        console.log(`ClaimHash: ${this.myClaims.claimHash}`);
+                                                                                                        console.log(`ClaimHash: ${myClaimHash}`);
                                                                                                 }
                                                                                            })
                                                                                            .catch((err) => { console.trace(err); return; });
@@ -250,8 +237,7 @@ class Optract extends BladeIronClient {
                                                                         console.log('Merkle Proof Process FAILED!!!!!!');
                                                                         console.log(`MerkleRoot: ${mr}`);
                                                                         console.log(`BlockData (IPFS): ${bd}`);
-                                                                        console.log(`ClaimHash: ${this.myClaims.claimHash}`);
-                                                                        // TODO: What now?
+                                                                        console.log(`ClaimHash: ${myClaimHash}`);
                                                                 }
                                                         })
                                                 }
@@ -353,7 +339,6 @@ class Optract extends BladeIronClient {
 
 		this.sendClaims = (initHeight, channel) =>
                 {
-			console.log(`DEBUG: Enter sendClaims`);
                         return this.results[initHeight].map((robj, idx) => {
                                 if (!robj.sent) {
                                         return this.ipfs_pubsub_publish(channel, robj.rlp).then((rc) => {
@@ -550,7 +535,11 @@ class Optract extends BladeIronClient {
 			this.channelName = ethUtils.bufferToHex(ethUtils.sha256(this.ctrAddrBook[this.ctrName]));
 			this.channelACK  = [ ...this.channelName ].reverse().join('');
 			this.call('BlockRegistry')('getSblockNo')().then((rc) => { 
+                                if (Number(rc) === 0) {
+                                        throw "Error: failed to read side block number. Try it later.";
+                                }
 				this.initHeight = rc; 
+			        console.log("current side block height: " + this.initHeight);
 				this.results = {[this.initHeight]: []};
 				this.myClaims = {};
 			})
@@ -563,9 +552,12 @@ class Optract extends BladeIronClient {
 			this.channelName = ethUtils.bufferToHex(ethUtils.sha256(this.ctrAddrBook[this.ctrName]));
 			this.channelACK  = [ ...this.channelName ].reverse().join('');
 			return this.call('BlockRegistry')('getSblockNo')().then((rc) => { 
-				this.initHeight = rc;  
-				this.bidRecords = {[this.initHeight]: {}};
+                                if (Number(rc) === 0) {
+                                        throw "Error: failed to read side block number. Try it later.";
+                                }
+				this.initHeight = rc;
 			        console.log("current side block height: " + this.initHeight);
+				this.bidRecords = {[this.initHeight]: {}};
                         }).then(()=> {
 			        return mkdir_promise(path.join(this.configs.database, String(this.initHeight)))
                         }).then(()=> {
@@ -582,6 +574,7 @@ class Optract extends BladeIronClient {
                             })
                             .then((QID) =>
                             {
+                                    this.startValidate();  // for next sblockNo
                                     return this.getReceipts(QID).then((QIDlist) => { return {[QID]: QIDlist} });
                             });
                         })

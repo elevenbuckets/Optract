@@ -208,47 +208,54 @@ class Optract extends BladeIronClient {
                 //         })
                 // }
 
-                this.claimOptract = (ctrName) =>
+                this.claimOptract = (ctrAddr) =>
                 {
-                        if (! (ctrName in this.ctrAddrBook) ) throw "contract not found";
-                        return this.call('BlockRegistry')('getSblockNo')().then((blockNo) => {
-                                return this.call('BlockRegistry')('getBlockInfo')(blockNo - 1).then((plist) => {
-                                        let mr = plist[1]; // block merkle root
-                                        let bd = plist[2]; // IPFS hash of block
-                                        if (mr !== '0x0' && bd !== '') {
-                                                this.validateMerkleProof(this.myClaims.claimHash, bd).then((rc) => {
-                                                        let args = [
-                                                            this.myClaims.proof,
-                                                            this.myClaims.isLeft,
-                                                            this.myClaims.targetLeaf,
-                                                            mr,
-                                                            this.myClaims.bidPrice
-                                                        ];
-                                                        if (rc) {
-                                                                return this.sendTk(ctrName)('claimOptract')(...args)()
-                                                                           .then((qid) => { return this.getReceipts(qid); })
-                                                                           .then((rx) => { 
-                                                                                let tx = rx[0];
-                                                                                console.dir(tx);
-                                                                                if (tx.status !== '0x1') {
-                                                                                        throw "Claim Optract Failed!";
-                                                                                } else {
-                                                                                        console.log(`***** Congretulation!!! YOU GOT THE CONTRACT!!! *****`);
-                                                                                        console.log(`MerkleRoot: ${mr}`);
-                                                                                        console.log(`BlockData (IPFS): ${bd}`);
-                                                                                        console.log(`ClaimHash: ${myClaimHash}`);
-                                                                                }
-                                                                           })
-                                                                           .catch((err) => { console.trace(err); return; });
-                                                        } else {
-                                                                console.log('Merkle Proof Process FAILED!!!!!!'); 
-                                                                console.log(`MerkleRoot: ${mr}`);
-                                                                console.log(`BlockData (IPFS): ${bd}`);
-                                                                console.log(`ClaimHash: ${myClaimHash}`);
-                                                                // TODO: What now?
-                                                        }
-                                                })
-                                        }
+                        return this.connectABI('Optract', ctrAddr, ctrAddr).then(()=>{
+                                let ctrName = 'Optract_' + ctrAddr;
+                                return this.call('BlockRegistry')('getSblockNo')().then((blockNo) => {
+                                        return this.call('BlockRegistry')('getBlockInfo')(blockNo - 1).then((plist) => {
+                                                let mr = plist[1]; // block merkle root
+                                                let bd = plist[2]; // IPFS hash of block
+                                                if (mr !== '0x0' && bd !== '') {
+                                                        this.validateMerkleProof(this.myClaims.claimHash, bd).then((rc) => {
+                                                                let args = [
+                                                                    this.myClaims.proof,
+                                                                    this.myClaims.isLeft,
+                                                                    this.myClaims.targetLeaf,
+                                                                    mr,
+                                                                    this.myClaims.bidPrice
+                                                                ];
+                                                                if (rc) {
+                                                                        console.log("debug in claimOptract (proof, isLeft, targetLeaf, mr, bidPrice)");
+                                                                        console.log(...args);
+                                                                        let totalAllowance = this.myClaims.bidPrice * 1.002;  // 0.2 % tx fee
+                                                                        return this.sendTk('DAI')('approve')(ctrAddr, totalAllowance)().then(()=>{
+                                                                                return this.sendTk(ctrName)('claimOptract')(...args)()
+                                                                                           .then((qid) => { return this.getReceipts(qid); })
+                                                                                           .then((rx) => {
+                                                                                                let tx = rx[0];
+                                                                                                console.dir(tx);
+                                                                                                if (tx.status !== '0x1') {
+                                                                                                        throw "Claim Optract Failed!";
+                                                                                                } else {
+                                                                                                        console.log(`***** Congretulation! YOU GOT THE CONTRACT!!! *****`);
+                                                                                                        console.log(`MerkleRoot: ${mr}`);
+                                                                                                        console.log(`BlockData (IPFS): ${bd}`);
+                                                                                                        console.log(`ClaimHash: ${this.myClaims.claimHash}`);
+                                                                                                }
+                                                                                           })
+                                                                                           .catch((err) => { console.trace(err); return; });
+                                                                        })
+                                                                } else {
+                                                                        console.log('Merkle Proof Process FAILED!!!!!!');
+                                                                        console.log(`MerkleRoot: ${mr}`);
+                                                                        console.log(`BlockData (IPFS): ${bd}`);
+                                                                        console.log(`ClaimHash: ${this.myClaims.claimHash}`);
+                                                                        // TODO: What now?
+                                                                }
+                                                        })
+                                                }
+                                        })
                                 })
                         })
                 }
@@ -558,6 +565,7 @@ class Optract extends BladeIronClient {
 			return this.call('BlockRegistry')('getSblockNo')().then((rc) => { 
 				this.initHeight = rc;  
 				this.bidRecords = {[this.initHeight]: {}};
+			        console.log("current side block height: " + this.initHeight);
                         }).then(()=> {
 			        return mkdir_promise(path.join(this.configs.database, String(this.initHeight)))
                         }).then(()=> {

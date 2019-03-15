@@ -8,7 +8,6 @@ const AsciiTable = require('ascii-table');
 const fs = require('fs');
 const path = require('path');
 const mkdirp = require('mkdirp');
-const accpw  = new WeakMap();
 
 // Helper functions, may go into bladeiron_api later
 const toBool = (str) =>
@@ -56,60 +55,18 @@ class Optract extends BladeIronClient {
 		super(rpcport, rpchost, options);
 	        this.ctrName = 'OptractRegistry';
 
-		// Prepared for infura-web3 instance inject
-		this.web3; 
-		this.accMgr;
-
-		// Infura related function PoC
-		this.unlockAccount = (address, password) => 
+		// IPFS pubsub stabilizer
+		this.ipfsReconnect = (bootnode) => (peerlist) =>
 		{
-			this.userWallet = undefined;
-			return this.accMgr.unlock(address, password).then((obj) => 
-			{
-				accpw.set(this, obj);
-
-				if (obj.pkey === null) return false;
-				this.userWallet = address;
-				return true;
-			})
-			.catch((err) => { console.log(`Wrong password...`); return false });
+			return this.ipfsSwarmConnect(bootnode)
+				   .then((rc) => { 
+					  let p = peerlist.map((i) => { return this.client.call('ipfs_ping', [i]) });
+					  return Promise.all(p).then((r) => { return {bootnode, peerlist, result: {SwarmConnect: rc, Ping: r} } })
+				                        //.catch((err) => { console.log(`In Optract ipfsReconnect:`); console.trace(err); return {bootnode, peerlist, result: err} })
+				   })
+				   .catch((err) => { console.log(`In Optract ipfsReconnect:`); console.trace(err); return {bootnode, peerlist, result: err} })
 		}
 
-		this.infuraTransfer = (symbol) => (toAddress, unitAmount) =>
-		{
-			const __sendTx = (resolve, reject) => {
-				this.web3.eth.getTransactionCount(this.userWallet, (err, nonce) => {
-					if (err) {
-						console.trace(err);
-						return reject(false);
-					}
-
-					let tx = new EthTx({
-						nonce: nonce,
-						gasPrice: this.toHex('20000000000'),
-						gasLimit: this.toHex('22000'),
-						to: toAddress,
-						value: this.toHex(String(unitAmount)),
-						chainId: this.networkID
-					});
-	
-					if (accpw.get(this).address !== this.userWallet) return reject('account info mismatched');
-
-					tx.sign(accpw.get(this).pkey);
-					this.web3.eth.sendRawTransaction(ethUtils.bufferToHex(tx.serialize()), (err, txHash) => {
-						if (err) {
-							console.trace(err);
-							return reject(false);
-						}
-						resolve(txHash);
-					})
-				})
-			}
-
-			return new Promise(__sendTx);
-		}
-
-		// Original Optract BI subclass, continues
                 this.createOptract = (ethAmount, totalPrice, period, optionPrice) =>
 		{
                         return this.call(this.ctrName)('queryOptionMinPrice')().then((optionMinPrice) =>

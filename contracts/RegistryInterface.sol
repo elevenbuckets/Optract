@@ -10,6 +10,7 @@ interface iOptractRegistry { // PoC ETH-DAI Optract
         function queryOptractRecords(address _addr) external view returns (uint, uint, address);
         function setCurrencyTokenAddr(address newCurrencyTokenAddr) external returns (bool);
         function setBlkAddr(address newBlkAddr) external returns (bool);
+        function setMemberCtrAddr(address _addr) external returns (bool);
 	function activeOptracts(uint start, uint length, address owner) external view returns (
 		address[] memory addrlist, 
 		   uint[] memory expTimeList, 

@@ -6,7 +6,7 @@ contract MemberShip {
     address[3] public coreManager;
     uint public totalMembers = 0;
     uint public totalManagers = 0;
-    uint public fee = 10000000000000000;
+    uint public fee = 0.1 ether;
     uint public memberPeriod = 365 days;
     bool public paused = false;
 
@@ -82,11 +82,12 @@ contract MemberShip {
     }
 
     // membership
-    function buyMembership() public payable feePaid returns (bool) {
+    function buyMembership() public payable feePaid whenNotPaused returns (bool) {
         require(addressToId[msg.sender] == 0);
         totalMembers += 1;
-        addressToId[msg.sender] = 1000 + totalMembers - totalManagers;
-        memberDB[totalMembers] = MemberInfo(msg.sender, block.timestamp, 0, bytes32(1000 + totalMembers - totalManagers), "");
+        uint _id = 1000 + totalMembers - totalManagers;
+        addressToId[msg.sender] = _id;
+        memberDB[_id] = MemberInfo(msg.sender, block.timestamp, 0, bytes32(1000 + totalMembers - totalManagers), "");
         return true;
     }
 

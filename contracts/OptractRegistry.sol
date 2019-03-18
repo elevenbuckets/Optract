@@ -2,14 +2,17 @@ pragma solidity ^0.5.2;
 
 import "./ERC20.sol";
 import "./Optract.sol";
+import "./MemberShip.sol";
 //import "./SafeMath.sol";
 
 // todo: memberOnly
+// todo: merge all pause/unpause function in other contracts to here (or in membership)
 
 contract OptractRegistry { // PoC ETH-DAI Optract
 	address[3] public operators;
 	address public currencyTokenAddr; // presumably 'DAI'
 	address public blkAddr; // side-chain merkle records
+	address public memberContractAddr;
 	uint public constant optionMinPrice = 5000000000000000000; // 5 DAIs
 	uint public totalOpts = 0;
 	bool public paused = false;
@@ -34,14 +37,20 @@ contract OptractRegistry { // PoC ETH-DAI Optract
 		_;
 	}
 
+	modifier activeMemberOnly(){
+                require(MemberShip(memberContractAddr).addrIsActiveMember(msg.sender));
+                _;
+        }
+
 	// Constructor
-	constructor(address _currencyTokenAddr, address _blkAddr) public {
+	constructor(address _currencyTokenAddr, address _blkAddr, address _memberContracAddr) public {
 		operators[0] = msg.sender;
 		currencyTokenAddr = _currencyTokenAddr;
 		blkAddr = _blkAddr;
+                memberContractAddr = _memberContracAddr;
 	}
 
-	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period, uint optionPrice) external notPaused {
+	function createOptract(uint256 ETHAmount, uint256 totalPrice, uint period, uint optionPrice) external notPaused activeMemberOnly {
 	        require(optionPrice >= optionMinPrice);
                 require(ERC20(currencyTokenAddr).allowance(msg.sender, address(this)) >= optionPrice);
                 // require(period * 1 days >= 30 days && period * 1 days <= 365 days);
@@ -108,6 +117,11 @@ contract OptractRegistry { // PoC ETH-DAI Optract
         function setBlkAddr(address newBlkAddr) public operatorOnly returns (bool) {
                 require(newBlkAddr != address(0));
                 blkAddr = newBlkAddr;
+                return true;
+        }
+
+        function setMemberCtrAddr(address _addr) public operatorOnly returns (bool){
+                memberContractAddr = _addr;
                 return true;
         }
 

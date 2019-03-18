@@ -172,8 +172,7 @@ class Optract extends BladeIronClient {
                                                                 if (rc) {
                                                                         console.log("* debug in claimOptract (proof, isLeft, targetLeaf, mr, bidPrice)");
                                                                         console.log(...args);
-                                                                        let totalAllowance = this.myClaims.bidPrice * 1.002;  // 0.2 % tx fee
-                                                                        return this.sendTk('DAI')('approve')(ctrAddr, totalAllowance)().then(()=>{
+                                                                        return this.sendTk('DAI')('approve')(ctrAddr, this.myClaims.totalPrice)().then(()=>{
                                                                                 return this.sendTk(ctrName)('claimOptract')(...args)()
                                                                                            .then((qid) => { return this.getReceipts(qid); })
                                                                                            .then((rx) => {
@@ -287,6 +286,7 @@ class Optract extends BladeIronClient {
 					
 					this.results[this.initHeight].push({...params, sent: false, rlp: rlp.serialize() });
 				        this.myClaims.bidPrice = bidPrice;
+                                        this.myClaims.totalPrice = bidPrice*1.002;  // 0.2% tx fee
 					
 					// IPFS_PUBSUB still needs to be added
 					return this.sendClaims(this.initHeight, this.channelName);

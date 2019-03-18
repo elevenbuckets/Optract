@@ -21,7 +21,7 @@ module.exports = function(deployer) {
 					 , "0x0000000000000000000000000000000000000000", DAIAddr).then(() => 
 	{
   		deployer.link(Optract, Registry);
-		return deployer.deploy(Registry, DAIAddr, BlockRegistry.address).then((iReg) => {
+		return deployer.deploy(Registry, DAIAddr, BlockRegistry.address, MemberShip.address).then((iReg) => {
 			console.log(`ETH-DAI Registry Address: ${iReg.address}`);
 			console.log(`Done!`);
 		})

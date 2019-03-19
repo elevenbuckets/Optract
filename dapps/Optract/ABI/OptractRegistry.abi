@@ -76,6 +76,21 @@
   },
   {
     "constant": true,
+    "inputs": [],
+    "name": "memberContractAddr",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function",
+    "signature": "0xc170f356"
+  },
+  {
+    "constant": true,
     "inputs": [
       {
         "name": "",
@@ -102,6 +117,10 @@
       },
       {
         "name": "_blkAddr",
+        "type": "address"
+      },
+      {
+        "name": "_memberContracAddr",
         "type": "address"
       }
     ],
@@ -264,6 +283,26 @@
     "stateMutability": "nonpayable",
     "type": "function",
     "signature": "0x70747092"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_addr",
+        "type": "address"
+      }
+    ],
+    "name": "setMemberCtrAddr",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xb8464efb"
   },
   {
     "constant": true,
